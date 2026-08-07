@@ -2444,6 +2444,32 @@ const SITE_TYPE_OVERRIDES_LC = Object.fromEntries(
   Object.entries(SITE_TYPE_OVERRIDES).map(([code, types]) => [code.toLowerCase(), new Set(types.map(t => t.toLowerCase()))])
 );
 
+// Cache of each site's imported "OTHER"-section type names (lowercased),
+// built lazily per site code the first time isExcluded needs it. A type
+// listed under a site's own imported "OTHER" category — e.g. after editing
+// its site_config_*.json and re-importing — is excluded from that site's
+// stats, matching how the entry tool itself treats its OTHER section as
+// non-counted/operational.
+const _siteOtherTypesCache = {};
+function getSiteOtherTypes(siteCode) {
+  if (!siteCode) return null;
+  const key = siteCode.toUpperCase();
+  if (key in _siteOtherTypesCache) return _siteOtherTypesCache[key];
+  let result = null;
+  try {
+    const raw = localStorage.getItem('ams_entry_cats_' + key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const otherKey = Object.keys(parsed || {}).find(k => k.trim().toUpperCase() === 'OTHER');
+      if (otherKey && Array.isArray(parsed[otherKey])) {
+        result = new Set(parsed[otherKey].map(t => (t||'').toLowerCase()));
+      }
+    }
+  } catch(e) { /* leave as null, falls through to normal exclusion rules */ }
+  _siteOtherTypesCache[key] = result;
+  return result;
+}
+
 function isExcluded(type, siteCode) {
   if (!type) return true;
   const t = type.trim();
@@ -2452,6 +2478,11 @@ function isExcluded(type, siteCode) {
   // Site-specific override takes priority — if this site counts this type
   // as a real incident, it's never excluded for that site, full stop.
   if (siteCode && SITE_TYPE_OVERRIDES_LC[siteCode.toLowerCase()]?.has(tl)) return false;
+  // A site's own imported categories (Other section) take priority next —
+  // if this site's config puts this type under Other, it's excluded for
+  // this site regardless of what the shared blacklist below says.
+  const siteOther = getSiteOtherTypes(siteCode);
+  if (siteOther && siteOther.has(tl)) return true;
   // Blacklist: exclude known operational/admin entries (case-insensitive).
   if (EXCLUDED_TYPES_LC.has(tl)) return true;
   // Keyword fallback for naming variants not covered above.
@@ -2543,15 +2574,31 @@ function getCatsForSite(data, siteName) {
       .map(r => r.type.trim())
   )].sort((a,b) => a.localeCompare(b));
 
-  if (!typesInData.length) return { sections: DEFAULT_CATS, allTypes: [], burnside: false };
+  // A site's own imported categories (from its site_config_*.json, via
+  // Import Site Config) take priority over the shared default list — this
+  // is what makes Manager's breakdown genuinely match what the entry tool
+  // shows guards, instead of a separate, parallel guess at categorisation.
+  const siteCode = (data.length ? (data[0].siteCode || '') : '').toUpperCase();
+  let importedCats = null;
+  if (siteCode) {
+    try {
+      const raw = localStorage.getItem('ams_entry_cats_' + siteCode);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Object.keys(parsed).length) importedCats = parsed;
+      }
+    } catch(e) { /* fall through to defaults below */ }
+  }
+
+  if (!typesInData.length) return { sections: importedCats || DEFAULT_CATS, allTypes: [], burnside: false };
 
   // ── Detect Burnside — check site name first, then data ───────────────────
   const nameToCheck = siteName || (data.length ? (data[0].site || '') : '');
-  const burnside    = nameToCheck.toLowerCase().includes('burnside') || isBurnsideSite(data);
-  const BASE_CATS   = burnside ? BURNSIDE_CATS : DEFAULT_CATS;
-  const SECTION_ORDER = burnside
-    ? ['HIGH PRIORITY','MEDIUM PRIORITY','LOW PRIORITY']
-    : ['GENERAL SECURITY','EMERGENCY RELATED','GUARD INTERVENTION'];
+  const burnside    = !importedCats && (nameToCheck.toLowerCase().includes('burnside') || isBurnsideSite(data));
+  const BASE_CATS   = importedCats || (burnside ? BURNSIDE_CATS : DEFAULT_CATS);
+  const SECTION_ORDER = importedCats
+    ? Object.keys(importedCats)
+    : (burnside ? ['HIGH PRIORITY','MEDIUM PRIORITY','LOW PRIORITY'] : ['GENERAL SECURITY','EMERGENCY RELATED','GUARD INTERVENTION']);
 
   // ── Keyword patterns for fallback classification ──────────────────────────
   const EMERGENCY_KEYWORDS = [
@@ -2587,7 +2634,16 @@ function getCatsForSite(data, siteName) {
     const tl = t.toLowerCase();
     let targetSection;
 
-    if (burnside) {
+    if (importedCats) {
+      // Map to the semantically closest section this site actually has,
+      // by name — never invent a section name the site's own config
+      // doesn't use, since the rendering code looks sections up by exact
+      // name/position and a stray extra section silently breaks it.
+      const findSection = (needle) => SECTION_ORDER.find(s => s.toUpperCase().includes(needle));
+      if (EMERGENCY_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('EMERGENCY');
+      if (!targetSection && GUARD_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('GUARD');
+      if (!targetSection) targetSection = findSection('SECURITY') || SECTION_ORDER[0];
+    } else if (burnside) {
       if (HIGH_KEYWORDS.some(k => tl.includes(k)))        targetSection = 'HIGH PRIORITY';
       else if (MEDIUM_KEYWORDS.some(k => tl.includes(k))) targetSection = 'MEDIUM PRIORITY';
       else if (LOW_KEYWORDS.some(k => tl.includes(k)))    targetSection = 'LOW PRIORITY';
@@ -4399,11 +4455,15 @@ function addSite() {
 }
 
 // Accepts the exact same per-site JSON config format the entry tool uses.
-// Only connection details are applied here (name, scriptUrl, wufooFormId,
-// poiUrl) — categories are deliberately NOT touched, since that's handled
-// separately via the existing Merge Categories flow. If a site with this
-// code already exists, its connection details are updated in place rather
-// than creating a duplicate.
+// Connection details (name, scriptUrl, wufooFormId, poiUrl) are applied as
+// before. Categories are now ALSO imported, stored under the exact same
+// localStorage key the entry tool itself uses (`ams_entry_cats_<CODE>`) so
+// Manager's monthly breakdown and stats genuinely match what the entry tool
+// shows guards — not a separate, parallel category system. A deliberate
+// re-import always overwrites this site's stored categories with whatever
+// the file contains, same as the entry tool's own re-import behaviour.
+// If a site with this code already exists, its connection details are
+// updated in place rather than creating a duplicate.
 function importSiteConfigFile(file) {
   if (!file) return;
   const reader = new FileReader();
@@ -4414,6 +4474,17 @@ function importSiteConfigFile(file) {
     if (!cfg.code || !cfg.name) { showToast('Config file must include at least a site name and code', 'error'); return; }
 
     const code = normaliseSiteCode(cfg.code);
+
+    const applyCategories = () => {
+      if (cfg.categories && Object.keys(cfg.categories).length) {
+        try {
+          localStorage.setItem('ams_entry_cats_' + code, JSON.stringify(cfg.categories));
+          delete _siteOtherTypesCache[code]; // stale cache would otherwise hide the new categories until reload
+        }
+        catch(e) { showToast('Categories could not save — device storage may be full', 'error'); }
+      }
+    };
+
     const existing = sites.find(s => s.code === code);
 
     if (existing) {
@@ -4421,6 +4492,7 @@ function importSiteConfigFile(file) {
       existing.scriptUrl  = cfg.scriptUrl     || existing.scriptUrl  || '';
       existing.wufooFormId= cfg.wufooFormId   || existing.wufooFormId|| '';
       existing.poiUrl     = cfg.poiUrl        || existing.poiUrl     || '';
+      applyCategories();
       saveSitesMeta(sites);
       renderSitesSettings();
       renderOverview();
@@ -4430,6 +4502,7 @@ function importSiteConfigFile(file) {
     } else {
       if (!confirmSiteCode(code)) { showToast('Site not added — check the code and try again', 'error'); return; }
       const s = { id: crypto.randomUUID(), name: cfg.name.trim(), code, scriptUrl: cfg.scriptUrl||'', wufooFormId: cfg.wufooFormId||'', poiUrl: cfg.poiUrl||'', data: [], ppeData: [], lastLoaded: null };
+      applyCategories();
       sites.push(s);
       saveSitesMeta(sites);
       activeSiteId = activeSiteId || s.id;

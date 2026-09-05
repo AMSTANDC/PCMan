@@ -392,6 +392,10 @@ body.light-mode .dk-empty { color:#3a4e62!important; }
   cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;
   transition:all 0.15s;user-select:none;display:flex;align-items:center;gap:6px;}
 .home-btn:hover{border-bottom-color:var(--dk-gold);}
+.back-btn{padding:13px 18px;font-size:13px;font-weight:700;color:var(--dk-text3);
+  cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;
+  transition:all 0.15s;user-select:none;display:none;align-items:center;gap:6px;}
+.back-btn:hover{color:var(--dk-gold);border-bottom-color:var(--dk-gold);}
 
 /* ── ACCESS SETUP (admin: page-access URLs/codes) ── */
 .landing-admin-link{text-align:center;margin-top:36px;color:#64889a;font-size:12px;
@@ -625,6 +629,7 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
 </header>
 
 <div class="nav-bar">
+  <div class="back-btn" id="nav-back-btn" onclick="goBack()">&larr; Back</div>
   <div class="home-btn" onclick="showTab('landing')">🏠 Home</div>
 </div>
 
@@ -685,9 +690,9 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
   <!-- Action tiles -->
   <div class="dk-action-tiles">
     <div class="dk-action-tile" onclick="showTab('log')"><span class="dk-at-icon">📋</span><span class="dk-at-label">Incident Log</span></div>
+    <div class="dk-action-tile" onclick="showTab('reports');renderReportsTab();"><span class="dk-at-icon">📊</span><span class="dk-at-label">Reports</span></div>
     <div class="dk-action-tile" onclick="showTab('equipment')"><span class="dk-at-icon">📦</span><span class="dk-at-label">Equipment</span></div>
     <div class="dk-action-tile" onclick="openPOIPicker()"><span class="dk-at-icon">📍</span><span class="dk-at-label">POI</span></div>
-    <div class="dk-action-tile" onclick="showTab('reports');renderReportsTab();"><span class="dk-at-icon">📊</span><span class="dk-at-label">Reports</span></div>
     <div class="dk-action-tile" onclick="showTab('admin');renderAdminTab();"><span class="dk-at-icon">⚙</span><span class="dk-at-label">Admin</span></div>
   </div>
 
@@ -1278,6 +1283,10 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
       <div style="font-size:28px;margin-bottom:8px;">📧</div>
       <div style="font-size:14px;font-weight:700;color:var(--dk-text);">Monthly Report PDF's</div>
     </div>
+    <div id="report-tab-paperlog" onclick="switchReportTab('paperlog')" style="background:var(--dk-panel);border:1px solid var(--dk-border);border-radius:10px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--dk-gold)'" onmouseout="this.style.borderColor=reportView==='paperlog'?'var(--dk-gold)':'var(--dk-border)'">
+      <div style="font-size:28px;margin-bottom:8px;">📝</div>
+      <div style="font-size:14px;font-weight:700;color:var(--dk-text);">Paper Log</div>
+    </div>
     <div onclick="showTab('ytd')" style="background:var(--dk-panel);border:1px solid var(--dk-border);border-radius:10px;padding:22px 16px;cursor:pointer;text-align:center;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--dk-gold)'" onmouseout="this.style.borderColor='var(--dk-border)'">
       <div style="font-size:28px;margin-bottom:8px;">📈</div>
       <div style="font-size:14px;font-weight:700;color:var(--dk-text);">YTD Summary</div>
@@ -1391,7 +1400,75 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
   <div id="stats-results"></div>
   </div>
 
-  
+
+<div id="report-sub-paperlog" style="display:none;">
+  <div class="page-hdr">
+    <div>
+      <div class="page-title">📝 Paper Log Sites</div>
+      <div class="page-sub">Sites still on paper incident logs, or running a standalone Wufoo form with no Manager integration — enter monthly totals by hand, or pull them from Wufoo</div>
+    </div>
+    <div style="display:flex;flex-wrap:nowrap;align-items:center;gap:8px;overflow-x:auto;">
+      <button class="btn btn-outline" onclick="document.getElementById('import-paperlog-historical-file').click()" style="color:#5DCAA5;border-color:rgba(93,202,165,0.3);white-space:nowrap;" title="Load a whole paperlog_&lt;code&gt;.json export (e.g. from the standalone Paper Log Stats tool) — imports every month in one go">&#128229; Import Historical JSON</button>
+      <input type="file" id="import-paperlog-historical-file" accept=".json" style="display:none;" onchange="importPaperLogHistoricalJSON(this.files[0]); this.value='';">
+      <button class="btn btn-gold" onclick="addPaperLogSite()" style="white-space:nowrap;">+ Add Paper Log Site</button>
+      <button class="btn btn-outline" onclick="document.getElementById('import-paperlog-configs-file').click()" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);white-space:nowrap;" title="Load a file made with Export All Configs — updates matching sites (by code) and adds any new ones">&#11014; Import All Configs</button>
+      <input type="file" id="import-paperlog-configs-file" accept=".json" style="display:none;" onchange="importPaperLogConfigs(this.files[0]); this.value='';">
+      <button class="btn btn-outline" onclick="exportPaperLogConfigs()" style="color:#5a8fd8;border-color:rgba(90,143,216,0.3);white-space:nowrap;" title="Download every Paper Log site's connection details and categories as one file — for backup or moving to another computer">&#11015; Export All Configs</button>
+    </div>
+  </div>
+
+  <div id="paperlog-sites-list" style="margin-bottom:24px;"></div>
+
+  <div class="settings-card">
+    <h3 style="margin-bottom:14px;">Monthly Entry</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:16px;">
+      <div>
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--dk-text3);text-transform:uppercase;margin-bottom:5px;">Site</label>
+        <select id="pl-site" onchange="loadPaperLogMonth()" style="width:100%;background:var(--dk-bg2);border:1px solid #1e3040;color:var(--dk-text);padding:9px 12px;border-radius:7px;font-size:13px;outline:none;color-scheme:dark;"></select>
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--dk-text3);text-transform:uppercase;margin-bottom:5px;">Month</label>
+        <select id="pl-month" style="width:100%;background:var(--dk-bg2);border:1px solid #1e3040;color:var(--dk-text);padding:9px 12px;border-radius:7px;font-size:13px;outline:none;color-scheme:dark;">
+          <option>January</option><option>February</option><option>March</option><option>April</option>
+          <option>May</option><option>June</option><option>July</option><option>August</option>
+          <option>September</option><option>October</option><option>November</option><option>December</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--dk-text3);text-transform:uppercase;margin-bottom:5px;">Year</label>
+        <select id="pl-year" style="width:100%;background:var(--dk-bg2);border:1px solid #1e3040;color:var(--dk-text);padding:9px 12px;border-radius:7px;font-size:13px;outline:none;color-scheme:dark;"></select>
+      </div>
+      <button onclick="loadPaperLogMonth()" class="dk-btn" style="padding:9px 18px;font-size:13px;">Load</button>
+    </div>
+
+    <div id="pl-existing-warn" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#F0997B;"></div>
+
+    <div id="pl-entry-wrap" style="display:none;">
+      <div class="field" style="max-width:420px;margin-bottom:18px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--dk-text3);text-transform:uppercase;margin-bottom:5px;">Guards on site this month</label>
+        <input type="text" id="pl-guards" placeholder="e.g. B. Hailes, G. Malhi, C. Steer" style="width:100%;background:var(--dk-bg2);border:1px solid #1e3040;color:var(--dk-text);padding:9px 12px;border-radius:7px;font-size:13px;outline:none;">
+        <div style="font-size:11px;color:var(--dk-text3);margin-top:4px;">Comma-separated — printed on the monthly report's Service &amp; Staff Management page.</div>
+      </div>
+
+      <div style="font-size:14px;font-weight:700;color:var(--dk-text);margin-bottom:14px;">
+        <span id="pl-grid-title">Enter incident counts</span>
+        <span id="pl-cats-toggle" onclick="togglePaperLogFullCats()" style="display:none;font-size:11px;font-weight:400;color:var(--dk-text3);cursor:pointer;text-decoration:underline;margin-left:8px;"></span>
+      </div>
+      <div id="pl-cats-body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:20px;"></div>
+      <div style="display:flex;align-items:center;gap:10px;padding-top:16px;border-top:1px solid var(--dk-border);flex-wrap:wrap;">
+        <div style="font-size:13px;color:var(--dk-text3);">Total incidents: <strong id="pl-total" style="color:var(--dk-text);">0</strong></div>
+        <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="pl-wufoo-btn" onclick="pullWufooForPaperLog()" class="dk-btn" style="font-size:13px;display:none;">&#8681; Pull from Wufoo</button>
+          <button onclick="clearPaperLogCounts()" class="dk-btn" style="font-size:13px;">Clear All</button>
+          <button onclick="generatePaperLogReport()" class="dk-btn" style="font-size:13px;">📄 Generate Report</button>
+          <button onclick="savePaperLogMonth()" style="background:#1d9e75;color:#000;border:none;border-radius:8px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;">💾 Save Month</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pl-no-site" style="color:var(--dk-text3);font-size:13px;text-align:center;padding:40px;">Select a site above to begin.</div>
+  </div>
+  </div>
 </div>
 
 
@@ -1625,6 +1702,28 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
         </div>
       </div>
       <div id="wsc-results"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAPER LOG — ASSIGN WUFOO CATEGORIES MODAL ══ -->
+<div id="pl-catassign-modal" onclick="if(event.target===this)closePaperLogCatModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:99999;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0f1f3d;border:1px solid #23385c;border-radius:14px;width:640px;max-width:95vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+    <div style="display:flex;align-items:center;gap:12px;padding:18px 24px;border-bottom:1px solid #23385c;position:sticky;top:0;background:#0f1f3d;z-index:5;">
+      <div style="width:34px;height:34px;background:#d85a30;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">&#10068;</div>
+      <div style="flex:1;">
+        <h3 style="margin:0;color:#eef2fa;font-size:16px;">Assign categories</h3>
+        <p id="pl-catassign-sub" style="margin:2px 0 0;color:#9fb0cc;font-size:12px;">These Wufoo incident types don't match a known category for this site — choose one for each</p>
+      </div>
+      <button onclick="closePaperLogCatModal()" style="background:none;border:none;color:#9fb0cc;cursor:pointer;font-size:22px;line-height:1;">✕</button>
+    </div>
+    <div style="padding:20px 24px;">
+      <div id="pl-catassign-rows" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;"></div>
+      <div style="font-size:12px;color:#6f8099;margin-bottom:16px;">Leave a type set to "Don't count" to exclude it — you can pull again later once its category is added.</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="closePaperLogCatModal()" class="btn btn-outline" style="font-size:13px;">Cancel</button>
+        <button onclick="applyPaperLogCatAssignments()" class="btn btn-gold" style="font-size:13px;">Apply &amp; Add to Counts</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3793,7 +3892,7 @@ let mBarInst = null, mPieInst = null;
 function loadSitesMeta()   { try { return JSON.parse(localStorage.getItem('ams_mgr_sites')||'[]'); } catch { return []; } }
 function saveSitesMeta(s)  {
   try {
-    localStorage.setItem('ams_mgr_sites', JSON.stringify(s.map(s=>({id:s.id,name:s.name,code:s.code,scriptUrl:s.scriptUrl||'',wufooFormId:s.wufooFormId||'',maintenanceWufooFormId:s.maintenanceWufooFormId||'',poiUrl:s.poiUrl||'',data:[],ppeData:[],lastLoaded:s.lastLoaded||null}))));
+    localStorage.setItem('ams_mgr_sites', JSON.stringify(s.map(s=>({id:s.id,name:s.name,code:s.code,scriptUrl:s.scriptUrl||'',wufooFormId:s.wufooFormId||'',maintenanceWufooFormId:s.maintenanceWufooFormId||'',poiUrl:s.poiUrl||'',data:[],ppeData:[],lastLoaded:s.lastLoaded||null,paperLogOnly:s.paperLogOnly||false}))));
   } catch(e) {
     console.error('saveSitesMeta FAILED (storage full):', e.message);
     showToast('⚠ Storage is full — site list could not be saved. See instructions to clear space.', 'error');
@@ -3925,7 +4024,23 @@ function updateClock() {
 // ═══════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════
+// ── Back-button navigation history — a simple stack of previously-active
+// panel names. goBack() pops the top entry and re-shows it, suppressing the
+// push that call would otherwise make (so Back doesn't shove you right back
+// to where you just came from).
+let _navHistory = [];
+let _navSuppressPush = false;
+
 function showTab(name, el) {
+  const activePanel = document.querySelector('.panel.active');
+  const currentName = activePanel ? activePanel.id.replace(/^panel-/, '') : null;
+  if (!_navSuppressPush && currentName && currentName !== name) {
+    _navHistory.push(currentName);
+  }
+  _navSuppressPush = false;
+  const backBtn = document.getElementById('nav-back-btn');
+  if (backBtn) backBtn.style.display = _navHistory.length ? 'flex' : 'none';
+
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
@@ -3951,6 +4066,13 @@ function showTab(name, el) {
     loadApplicationsTab();
   }
   if(name==='accesssetup') { renderAccessSetupForm(); }
+}
+
+function goBack() {
+  if (!_navHistory.length) return;
+  const prev = _navHistory.pop();
+  _navSuppressPush = true;
+  showTab(prev);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4026,25 +4148,31 @@ function renderOverview() {
   const statBar = document.getElementById('overview-stats-bar');
   grid.innerHTML = '';
 
-  if (!sites.length) {
+  // Paper-log-only sites have no real per-incident data of their own (their
+  // monthly totals live in a separate paperlog_<code>.json, not site.data) —
+  // including them here would only add misleading near-empty cards/totals.
+  // They get their own list inside the Paper Log tab on the Reports page instead.
+  const dashSites = sites.filter(s=>!s.paperLogOnly);
+
+  if (!dashSites.length) {
     noSites.style.display='block'; if(statBar)statBar.style.display='none';
     document.getElementById('overview-sub').textContent='No sites configured'; return;
   }
   noSites.style.display = 'none';
 
-  const allIncidents = sites.flatMap(s=>(s.data||[]).filter(r=>!isExcluded(r.type, r.siteCode)));
+  const allIncidents = dashSites.flatMap(s=>(s.data||[]).filter(r=>!isExcluded(r.type, r.siteCode)));
   const allMonths    = getSortedMonths(allIncidents);
   const lastMonth    = allMonths[allMonths.length-1]||'';
   const countWithSecondary = arr => arr.filter(r => !REGISTER_LINKED_TYPES_LC.has((r.type||'').toLowerCase())).reduce((s, r) => s + 1 + (r.secondary && r.secondary !== r.type ? 1 : 0), 0);
   const thisMonthAll = countWithSecondary(allIncidents.filter(r=>r.month===lastMonth));
-  const allPPE = sites.reduce((n,s)=>n+(s.ppeData||[]).length, 0);
-  const allAAS = sites.reduce((n,s)=>n+(s.aasData||[]).length, 0);
+  const allPPE = dashSites.reduce((n,s)=>n+(s.ppeData||[]).length, 0);
+  const allAAS = dashSites.reduce((n,s)=>n+(s.aasData||[]).length, 0);
   const aasUnread = hasUnseenAAS();
-  const allInjury = sites.reduce((n,s)=>n+(s.injuryData||[]).length, 0);
+  const allInjury = dashSites.reduce((n,s)=>n+(s.injuryData||[]).length, 0);
   const injuryUnread = hasUnseenInjury();
-  const allIsolationsOpen = sites.reduce((n,s)=>n+(s.isolationData||[]).filter(r=>r.status==='Isolated').length, 0);
-  const allPermitsOpen = sites.reduce((n,s)=>n+(s.permitData||[]).filter(r=>r.status==='Active').length, 0);
-  const allKeysOut = sites.reduce((n,s)=>n+(s.keysData||[]).filter(r=>r.status==='Out').length, 0);
+  const allIsolationsOpen = dashSites.reduce((n,s)=>n+(s.isolationData||[]).filter(r=>r.status==='Isolated').length, 0);
+  const allPermitsOpen = dashSites.reduce((n,s)=>n+(s.permitData||[]).filter(r=>r.status==='Active').length, 0);
+  const allKeysOut = dashSites.reduce((n,s)=>n+(s.keysData||[]).filter(r=>r.status==='Out').length, 0);
 
   // Rolling 12 months prior to (not including) the current month, across all sites
   const nowAll = new Date();
@@ -4058,7 +4186,7 @@ function renderOverview() {
   const allIncidents12 = countWithSecondary(allIncidents.filter(r => rolling12MonthsAll.includes(r.month)));
 
   // All unresolved equipment faults/remarks across all sites
-  const allFaults = sites.flatMap(s =>
+  const allFaults = dashSites.flatMap(s =>
     (s.eqData||[]).filter(r =>
       !r.faultResolved && (
         r.conditionOut==='Faulty' || r.conditionIn==='Faulty'
@@ -4069,13 +4197,13 @@ function renderOverview() {
   );
 
   document.getElementById('overview-sub').textContent =
-    `${sites.length} site${sites.length!==1?'s':''} · ${countWithSecondary(allIncidents)} total incidents across all sites`;
+    `${dashSites.length} site${dashSites.length!==1?'s':''} · ${countWithSecondary(allIncidents)} total incidents across all sites`;
 
   if(statBar){
     statBar.style.display='flex';
     statBar.innerHTML=`
       <div class="dk-ov-stat" style="background:rgba(154,180,196,0.08);border:1px solid rgba(154,180,196,0.35);border-radius:8px;padding:8px 20px;">
-        <div class="dk-ov-val" style="color:#9ab4c4;">${sites.length}</div>
+        <div class="dk-ov-val" style="color:#9ab4c4;">${dashSites.length}</div>
         <div class="dk-ov-lbl">Sites</div>
       </div>
       <div class="dk-ov-stat" style="background:rgba(55,138,221,0.08);border:1px solid rgba(55,138,221,0.35);border-radius:8px;padding:8px 20px;">
@@ -4116,7 +4244,7 @@ function renderOverview() {
       </div>`;
   }
 
-  [...sites].sort((a,b)=>a.name.localeCompare(b.name)).forEach(s => {
+  [...dashSites].sort((a,b)=>a.name.localeCompare(b.name)).forEach(s => {
     const incidents  = (s.data||[]).filter(r=>!isExcluded(r.type, r.siteCode));
     const months     = getSortedMonths(incidents);
 
@@ -4590,7 +4718,7 @@ async function refreshLogData(){
 function populateEmailSiteSelect() {
   const sel=document.getElementById('email-site');
   sel.innerHTML='';
-  sites.forEach(s=>sel.appendChild(new Option(s.name,s.id)));
+  sites.filter(s=>!s.paperLogOnly).forEach(s=>sel.appendChild(new Option(s.name,s.id)));
   populateEmailMonths();
 }
 function populateEmailMonths() {
@@ -4616,7 +4744,7 @@ function generateReport() {
   buildPDFReport(site, allData, monthStr, guards);
 }
 
-function buildPDFReport(site, allData, monthStr, guardsStr) {
+function buildPDFReport(site, allData, monthStr, guardsStr, opts = {}) {
   const { sections: catSections, allTypes: allCatsPDF, burnside } = getCatsForSite(allData, site?.name||"");
 
   // Get section keys in order (exclude OTHER)
@@ -5156,11 +5284,11 @@ body{font-family:'Inter',-apple-system,sans-serif;background:#e8eef5;color:#1a1a
     <div class="page-hdr-right">Page 5</div>
   </div>
 
-  <div class="section-title">Times of Incident Stats for ${monthStr}</div>
+  ${!opts.skipTimeCharts ? `<div class="section-title">Times of Incident Stats for ${monthStr}</div>
   <div class="chart-box">
     <div class="chart-title">Incidents by Day and Shift Period</div>
     <div id="timeChart-wrap" style="width:100%;height:260px;"><canvas id="timeChart" style="display:block;"></canvas></div>
-  </div>
+  </div>` : ''}
 
   <div class="section-title">Security Related Incidents Chart</div>
   <div class="chart-box">
@@ -5173,12 +5301,14 @@ body{font-family:'Inter',-apple-system,sans-serif;background:#e8eef5;color:#1a1a
 
 ${"<"}script${">"}
 (function() {
+  var SKIP_TIME  = ${opts.skipTimeCharts ? 'true' : 'false'};
   var ALL_DAYS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   var RAW_DAYS   = ${JSON.stringify(days)};
   var TC         = ${JSON.stringify(timeCounts)};
   var SHIFTS     = ['0645\u20131200','1200\u20131730','1730\u20132200'];
   var SHIFT_COLS = ['#1a3a6b','#c0392b','#7a9e3b'];
 
+  if (!SKIP_TIME) {
   // Always map all 7 days, defaulting to 0
   var shiftData = SHIFTS.map(function(sh, si) {
     return ALL_DAYS.map(function(day) {
@@ -5210,6 +5340,7 @@ ${"<"}script${">"}
       }
     }
   });
+  } // end if (!SKIP_TIME)
 
   // ── CATEGORY BREAKDOWN ──────────────────────────────────────
   var ALL_MONTHS = ${JSON.stringify(allMonths.slice(-7))};
@@ -5260,7 +5391,7 @@ ${"<"}/script${">"}
   <div id="print-content"></div>
 </div>
 
-<!-- ══ PAGE 6: HEAT MAP ══ -->
+${!opts.skipTimeCharts ? `<!-- ══ PAGE 6: HEAT MAP ══ -->
 <div class="report-page page-break">
   <div class="page-hdr">
     <img src="data:image/png;base64,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" alt="AMS Security" style="height:38px;width:auto;">
@@ -5357,7 +5488,7 @@ ${"<"}/script${">"}
     </div>`).join('')}
     <span style="font-size:11px;color:#888;">← Low to High →</span>
   </div>
-</div>
+</div>` : ''}
 
 </div>
 
@@ -5388,13 +5519,14 @@ function renderSitesSettings() {
 
   const list = document.getElementById('sites-list');
   list.innerHTML = '';
-  if (!sites.length) {
+  const nonPaperLogSites = sites.filter(s=>!s.paperLogOnly);
+  if (!nonPaperLogSites.length) {
     list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);font-size:13px;">No sites added yet. Click <strong>+ Add Site</strong> above.</div>';
     return;
   }
-  [...sites].sort((a,b)=>a.name.localeCompare(b.name)).forEach(s => {
+  nonPaperLogSites.sort((a,b)=>a.name.localeCompare(b.name)).forEach(s => {
     const linked  = !!handles[s.id];
-    
+
     const div = document.createElement('div');
     div.className = 'settings-card';
     div.innerHTML = `
@@ -5579,7 +5711,7 @@ function addSite() {
 // the file contains, same as the entry tool's own re-import behaviour.
 // If a site with this code already exists, its connection details are
 // updated in place rather than creating a duplicate.
-function importSiteConfigFile(file) {
+function importSiteConfigFile(file, opts = {}) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -5608,25 +5740,29 @@ function importSiteConfigFile(file) {
       existing.wufooFormId= cfg.wufooFormId   || existing.wufooFormId|| '';
       existing.maintenanceWufooFormId = cfg.maintenanceWufooFormId || existing.maintenanceWufooFormId || '';
       existing.poiUrl     = cfg.poiUrl        || existing.poiUrl     || '';
+      if (opts.paperLogOnly) existing.paperLogOnly = true;
       applyCategories();
       saveSitesMeta(sites);
       renderSitesSettings();
       renderOverview();
       populateEmailSiteSelect();
+      if (opts.paperLogOnly) renderPaperLogSitesList();
       showToast(`Updated "${existing.name}" from config file.`, 'success');
-      if (existing.scriptUrl) fetchSiteFromScript(existing.id);
+      if (existing.scriptUrl && !opts.paperLogOnly) fetchSiteFromScript(existing.id);
     } else {
       if (!confirmSiteCode(code)) { showToast('Site not added — check the code and try again', 'error'); return; }
       const s = { id: crypto.randomUUID(), name: cfg.name.trim(), code, scriptUrl: cfg.scriptUrl||'', wufooFormId: cfg.wufooFormId||'', maintenanceWufooFormId: cfg.maintenanceWufooFormId||'', poiUrl: cfg.poiUrl||'', data: [], ppeData: [], lastLoaded: null };
+      if (opts.paperLogOnly) s.paperLogOnly = true;
       applyCategories();
       sites.push(s);
       saveSitesMeta(sites);
-      activeSiteId = activeSiteId || s.id;
+      if (!opts.paperLogOnly) activeSiteId = activeSiteId || s.id;
       renderSitesSettings();
       renderOverview();
       populateEmailSiteSelect();
+      if (opts.paperLogOnly) renderPaperLogSitesList();
       showToast(`Added "${s.name}" from config file.`, 'success');
-      if (s.scriptUrl) fetchSiteFromScript(s.id);
+      if (s.scriptUrl && !opts.paperLogOnly) fetchSiteFromScript(s.id);
     }
   };
   reader.readAsText(file);
@@ -10715,7 +10851,7 @@ function initHistorical() {
   // Populate sites
   const curVal = siteSel.value;
   siteSel.innerHTML = '<option value="">— Select site —</option>';
-  [...sites].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+  sites.filter(s=>!s.paperLogOnly).sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
     const o = Object.assign(document.createElement('option'), {value: s.id, textContent: s.name});
     if (s.id === curVal || (!curVal && s.id === activeSiteId)) o.selected = true;
     siteSel.appendChild(o);
@@ -10927,7 +11063,875 @@ async function saveHistoricalData() {
 }
 
 
+// ══ PAPER LOG (SITES WITHOUT ELECTRONIC LOGGING) ═════════════════════════════
+// Sites that only have a paper incident log, or run a standalone Wufoo form
+// with no Manager integration at all, are entries in the SAME sites[] array
+// as every other site — just flagged paperLogOnly:true — but their monthly
+// totals live in a SEPARATE Drive file (paperlog_<code>.json, one small
+// {meta, months:{ "August 2026": {counts, total, enteredAt, guards} }} record
+// per month) rather than the per-incident ams_<code>.json every other site
+// uses. That's a deliberate, different shape — not synthetic spread-out
+// incident records — so it never collides with a real site's data or with
+// Historical Data Entry's own (persisted) synthetic-record approach.
 
+let _paperLogCache = {}; // { [siteId]: <the full paperlog_<code>.json payload as last loaded/saved> }
+let _plPendingAssign = null; // { siteId, monthStr, rows: [{raw, count, suggested}] } — set while the "assign categories" modal is open
+let _plHistoryOnly = false; // toggled by "history only" link — reset whenever a different site/month is loaded. Default is FALSE: show every configured category (including ones with no past usage yet), since future months may need a category that's never been used before.
+
+// The category list a Paper Log site actually uses — prefer what's already
+// stored in its own cloud file (payload.meta.categories, set at import/save
+// time and synced across every computer via Drive) over the local browser's
+// entry-tool config (getFullCatsForSite / ams_entry_cats_<CODE>). Most Paper
+// Log sites are plain paper-only sites with no real entry-tool config at
+// all, so getFullCatsForSite() commonly falls back to the big generic
+// default category list — wrong section names, wrong categories entirely —
+// which is what was causing the Monthly Entry grid (and Merge Categories) to
+// show the wrong, incomplete list for a site like this. Only actually falls
+// back to the local/default list when the cloud payload has no categories
+// yet (a genuinely brand-new site).
+function paperLogEffectiveCats(site, payload) {
+  if (payload && payload.meta && payload.meta.categories && Object.keys(payload.meta.categories).length) {
+    return payload.meta.categories;
+  }
+  return getFullCatsForSite(site).sections;
+}
+
+// Per-site memory of raw Wufoo IncidentType text -> the real category the
+// user has previously assigned it to, so the same free-text type (e.g. a
+// Wufoo dropdown option that doesn't literally match this site's category
+// names) only ever has to be classified once. Keyed by site code.
+function getPaperLogCatMap(siteCode) {
+  try {
+    const raw = localStorage.getItem('ams_wufoo_catmap_' + (siteCode||'').toUpperCase());
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+function savePaperLogCatMap(siteCode, map) {
+  try { localStorage.setItem('ams_wufoo_catmap_' + (siteCode||'').toUpperCase(), JSON.stringify(map)); } catch(e) { /* ignore */ }
+}
+
+function getPaperLogSites() { return sites.filter(s => s.paperLogOnly); }
+
+// ── Site management (top of the tab) ──────────────────────────────────────
+function renderPaperLogSitesList() {
+  const list = document.getElementById('paperlog-sites-list');
+  if (!list) return;
+  const plSites = getPaperLogSites();
+  if (!plSites.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--dk-text3);font-size:13px;">No paper log sites yet. Click <strong>+ Add Paper Log Site</strong> above.</div>';
+    return;
+  }
+  list.innerHTML = [...plSites].sort((a,b)=>a.name.localeCompare(b.name)).map(s => `
+    <div class="settings-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;margin-bottom:8px;">
+      <div style="flex:1;min-width:220px;">
+        <div style="font-weight:700;font-size:14px;color:var(--dk-text);">${s.name}</div>
+        <div style="font-size:11px;color:var(--dk-text3);margin-top:2px;">
+          Code: <span style="font-family:monospace;color:var(--dk-gold);">${s.code||'(none)'}</span> ·
+          Wufoo: ${s.wufooFormId ? `&#10003; Form ${s.wufooFormId}` : 'not configured'} ·
+          ${s.scriptUrl ? '&#9729; script URL set' : 'no script URL — set one to save/load monthly totals'}
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="renamePaperLogSite('${s.id}')" style="color:var(--dk-gold);">✏ Rename</button>
+      <button class="btn btn-outline btn-sm" onclick="editPaperLogSiteCode('${s.id}')" style="color:#ef9f27;border-color:rgba(239,159,39,0.3);">&#128290; Edit Code</button>
+      <button class="btn btn-outline btn-sm" onclick="editPaperLogScriptUrl('${s.id}')" style="color:#1d9e75;border-color:rgba(29,158,117,0.3);">&#9729; Script URL</button>
+      <button class="btn btn-outline btn-sm" onclick="editPaperLogWufooId('${s.id}')" style="color:#d85a30;border-color:rgba(216,90,48,0.3);">&#128279; Wufoo ID</button>
+      <button class="btn btn-outline btn-sm" onclick="removePaperLogSite('${s.id}')" style="color:var(--dk-danger);border-color:rgba(220,38,38,0.3);">Remove Site</button>
+    </div>
+  `).join('');
+}
+
+// Thin wrappers around the shared site-management functions used by the
+// regular Sites tab — same prompts/behaviour, just re-rendering this tab's
+// own list afterward instead of (or alongside) renderSitesSettings().
+function renamePaperLogSite(id) { renameSite(id); renderPaperLogSitesList(); }
+function editPaperLogSiteCode(id) { editSiteCode(id); renderPaperLogSitesList(); }
+function removePaperLogSite(id) {
+  const wasSelected = document.getElementById('pl-site')?.value === id;
+  removeSite(id);
+  renderPaperLogSitesList();
+  if (wasSelected) initPaperLog();
+}
+
+function editPaperLogScriptUrl(id) {
+  const site = sites.find(s => s.id === id);
+  if (!site) return;
+  const val = prompt('Google Apps Script URL for "' + site.name + '" — the same Drive-sync backend used by other sites:', site.scriptUrl || '');
+  if (val === null) return;
+  site.scriptUrl = val.trim();
+  saveSitesMeta(sites);
+  renderPaperLogSitesList();
+  showToast(site.scriptUrl ? 'Script URL saved' : 'Script URL cleared', 'success');
+}
+
+function editPaperLogWufooId(id) {
+  const site = sites.find(s => s.id === id);
+  if (!site) return;
+  const val = prompt('Wufoo Form ID for "' + site.name + '" (leave blank if this site has no Wufoo incident form):', site.wufooFormId || '');
+  if (val === null) return;
+  site.wufooFormId = val.trim();
+  saveSitesMeta(sites);
+  renderPaperLogSitesList();
+  if (document.getElementById('pl-site')?.value === id) {
+    const btn = document.getElementById('pl-wufoo-btn');
+    if (btn) btn.style.display = site.wufooFormId ? 'inline-block' : 'none';
+  }
+  showToast(site.wufooFormId ? 'Wufoo Form ID saved' : 'Wufoo Form ID cleared', 'success');
+}
+
+function addPaperLogSite() {
+  const name = prompt('Paper log site name (e.g. Example Shopping Centre):');
+  if (!name || !name.trim()) return;
+  const rawCode = prompt('Site code for filename (e.g. EXAMPLESC):');
+  const code = normaliseSiteCode(rawCode);
+  if (!confirmSiteCode(code)) { showToast('Site not added — check the code and try again', 'error'); return; }
+  // Pre-fill from an existing site's script URL, if any — every site normally
+  // points at the same single Apps Script deployment, so this saves re-typing.
+  const existingScriptUrl = sites.find(s => s.scriptUrl)?.scriptUrl || '';
+  const scriptUrl = (prompt('Google Apps Script URL (same Drive-sync backend used by other sites):', existingScriptUrl) || '').trim();
+  const wufooFormId = (prompt('Wufoo Form ID (optional — leave blank if this site does not run a Wufoo incident form):', '') || '').trim();
+  const s = {
+    id: crypto.randomUUID(), name: name.trim(), code, scriptUrl, wufooFormId,
+    data: [], ppeData: [], lastLoaded: null, paperLogOnly: true
+  };
+  sites.push(s);
+  saveSitesMeta(sites);
+  renderPaperLogSitesList();
+  initPaperLog();
+  showToast(`Paper log site "${s.name}" added.`, 'success');
+}
+
+// ── Bulk export/import of every Paper Log site's connection config +
+// categories (name, code, scriptUrl, wufooFormId, categories) as one file —
+// for backing up the whole Paper Log list or moving it to another computer.
+// Distinct from the Sites tab's "Export/Import Settings" (covers every
+// site's connection details for the whole Manager, but not categories, and
+// isn't scoped to Paper Log sites specifically). ──────────────────────────
+function exportPaperLogConfigs() {
+  const plSites = getPaperLogSites();
+  if (!plSites.length) { showToast('No Paper Log sites to export', 'error'); return; }
+  const payload = {
+    __ams_export__: 'paperlog-configs',
+    exportedAt: new Date().toISOString(),
+    sites: plSites.map(s => {
+      let categories;
+      try {
+        const raw = localStorage.getItem('ams_entry_cats_' + (s.code||'').toUpperCase());
+        if (raw) categories = JSON.parse(raw);
+      } catch(e) { /* leave categories unset — receiving end falls back to defaults */ }
+      const cfg = { name: s.name, code: s.code, scriptUrl: s.scriptUrl || '', wufooFormId: s.wufooFormId || '' };
+      if (categories) cfg.categories = categories;
+      return cfg;
+    }),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ams-paperlog-configs-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Exported ${payload.sites.length} Paper Log site config(s).`, 'success');
+}
+
+function importPaperLogConfigs(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let payload;
+    try { payload = JSON.parse(e.target.result); }
+    catch { showToast('That file is not valid JSON', 'error'); return; }
+    if (payload.__ams_export__ !== 'paperlog-configs' || !Array.isArray(payload.sites)) {
+      showToast('That doesn\'t look like a Paper Log configs export (made with Export All Configs)', 'error');
+      return;
+    }
+    if (!confirm(`Import ${payload.sites.length} Paper Log site config(s)? Existing sites (matched by code) get their connection details and categories updated; codes not found yet are added as new Paper Log sites.`)) return;
+
+    let added = 0, updated = 0;
+    payload.sites.forEach(cfg => {
+      if (!cfg || !cfg.code || !cfg.name) return;
+      const code = normaliseSiteCode(cfg.code);
+      if (cfg.categories && Object.keys(cfg.categories).length) {
+        try {
+          localStorage.setItem('ams_entry_cats_' + code, JSON.stringify(cfg.categories));
+          delete _siteOtherTypesCache[code];
+        } catch(e) { /* storage full — connection details below still get applied */ }
+      }
+      const existing = sites.find(s => s.code === code);
+      if (existing) {
+        existing.name = cfg.name.trim();
+        existing.scriptUrl = cfg.scriptUrl || existing.scriptUrl || '';
+        existing.wufooFormId = cfg.wufooFormId || existing.wufooFormId || '';
+        existing.paperLogOnly = true;
+        updated++;
+      } else {
+        sites.push({
+          id: crypto.randomUUID(), name: cfg.name.trim(), code, scriptUrl: cfg.scriptUrl || '', wufooFormId: cfg.wufooFormId || '',
+          data: [], ppeData: [], lastLoaded: null, paperLogOnly: true
+        });
+        added++;
+      }
+    });
+    saveSitesMeta(sites);
+    renderPaperLogSitesList();
+    initPaperLog();
+    showToast(`Imported Paper Log configs — ${added} added, ${updated} updated.`, 'success');
+  };
+  reader.readAsText(file);
+}
+
+// ── Bulk import of a whole paperlog_<code>.json export (all months at once) ─
+// Accepts exactly the shape Paper Log itself saves/loads — the same file a
+// standalone tool like Paper Log Stats produces. Matches the destination site
+// by meta.code; auto-creates a new Paper Log site if none exists yet. If the
+// file's category names don't all match the site's real configured
+// categories, asks once whether to adopt the file's categories as official
+// (import everything) or keep the site's categories and drop unmatched counts.
+function importPaperLogHistoricalJSON(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let payload;
+    try { payload = JSON.parse(e.target.result); }
+    catch { showToast('That file is not valid JSON', 'error'); return; }
+
+    const fileMeta = payload && payload.meta;
+    if (!fileMeta || !fileMeta.code || !fileMeta.name) {
+      showToast('File must include meta.name and meta.code — this doesn\'t look like a paper log export', 'error');
+      return;
+    }
+    const months = payload.months && typeof payload.months === 'object' ? payload.months : {};
+    const monthKeys = Object.keys(months);
+    if (!monthKeys.length) { showToast('File has no months to import', 'error'); return; }
+
+    const code = normaliseSiteCode(fileMeta.code);
+    let site = sites.find(s => s.code === code);
+
+    if (!site) {
+      if (!confirm(`No existing site with code "${code}" — create a new Paper Log site "${fileMeta.name}" and import ${monthKeys.length} month${monthKeys.length!==1?'s':''} of data?`)) return;
+      const existingScriptUrl = sites.find(s => s.scriptUrl)?.scriptUrl || '';
+      const scriptUrl = (prompt('Google Apps Script URL (same Drive-sync backend used by other sites):', existingScriptUrl) || '').trim();
+      if (!scriptUrl) { showToast('Site not created — a script URL is required to save its data', 'error'); return; }
+      const wufooFormId = (prompt('Wufoo Form ID for "' + fileMeta.name.trim() + '" (optional — leave blank if this site does not run a Wufoo incident form, or set it later via the "Wufoo ID" button):', '') || '').trim();
+      site = {
+        id: crypto.randomUUID(), name: fileMeta.name.trim(), code, scriptUrl, wufooFormId,
+        data: [], ppeData: [], lastLoaded: null, paperLogOnly: true
+      };
+      sites.push(site);
+      saveSitesMeta(sites);
+      renderPaperLogSitesList();
+      initPaperLog();
+      // Brand-new site — nothing to conflict with, so adopt the file's
+      // categories immediately as this site's official list.
+      applyPaperLogImportCategories(code, fileMeta.categories);
+      finishPaperLogImport(site, fileMeta.categories || {}, months, []);
+      return;
+    }
+
+    if (!site.scriptUrl) {
+      showToast(`"${site.name}" has no Apps Script URL configured — set one in the list above first`, 'error');
+      return;
+    }
+
+    // Compare the file's category names against this site's REAL configured
+    // categories (preferring whatever's already cached from its own cloud
+    // file over the local entry-tool default) — Paper Log's own
+    // classification never renames unmatched text (see pullWufooForPaperLog),
+    // so a straight per-name check here is enough to catch a genuine mismatch.
+    const realSections = paperLogEffectiveCats(site, _paperLogCache[site.id]);
+    const norm = s => (s||'').toLowerCase().replace(/\s+/g,' ').trim();
+    const realByNorm = {};
+    Object.values(realSections).forEach(list => list.forEach(c => { realByNorm[norm(c)] = c; }));
+
+    const fileCatNames = new Set();
+    monthKeys.forEach(m => Object.keys((months[m] && months[m].counts) || {}).forEach(c => fileCatNames.add(c)));
+    const unmatched = [...fileCatNames].filter(c => !realByNorm[norm(c)]);
+
+    if (!unmatched.length) {
+      finishPaperLogImport(site, realSections, months, []);
+      return;
+    }
+
+    const preview = unmatched.slice(0, 8).join(', ') + (unmatched.length > 8 ? `, +${unmatched.length-8} more` : '');
+    const adopt = confirm(
+      `${unmatched.length} of ${fileCatNames.size} category names in this file don't match "${site.name}"'s configured categories:\n\n${preview}\n\n`
+      + `Click OK to ADOPT the file's categories as this site's official list and import everything.\n`
+      + `Click Cancel to keep this site's current categories and import matched data only (unmatched counts will be dropped).`
+    );
+
+    if (adopt) {
+      applyPaperLogImportCategories(code, fileMeta.categories);
+      finishPaperLogImport(site, fileMeta.categories || {}, months, []);
+    } else {
+      // Rebuild every month's counts using only matched categories, mapped
+      // onto the site's own real category spelling/casing.
+      const cleanedMonths = {};
+      const droppedTotals = {};
+      monthKeys.forEach(m => {
+        const src = months[m] || {};
+        const counts = {};
+        let total = 0;
+        Object.entries(src.counts || {}).forEach(([cat, n]) => {
+          const real = realByNorm[norm(cat)];
+          if (real) { counts[real] = (counts[real]||0) + n; total += n; }
+          else { droppedTotals[cat] = (droppedTotals[cat]||0) + n; }
+        });
+        cleanedMonths[m] = { counts, total, enteredAt: src.enteredAt || new Date().toISOString(), guards: src.guards || '' };
+      });
+      const droppedList = Object.entries(droppedTotals).map(([cat,n]) => `${cat} (${n})`);
+      finishPaperLogImport(site, realSections, cleanedMonths, droppedList);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function applyPaperLogImportCategories(code, categories) {
+  if (!categories || !Object.keys(categories).length) return;
+  try {
+    localStorage.setItem('ams_entry_cats_' + code, JSON.stringify(categories));
+    delete _siteOtherTypesCache[code]; // stale cache would otherwise hide the new categories until reload
+  } catch(e) { showToast('Categories could not save — device storage may be full', 'error'); }
+}
+
+// Pushes the whole assembled months object in a single request — the real
+// backend merges months key-by-key (see doPost's paperLog branch), so a
+// multi-month batch lands in one call exactly the same as a single Save
+// Month does, rather than needing one request per month.
+async function finishPaperLogImport(site, categories, months, droppedList, verb) {
+  verb = verb || 'Imported';
+  const meta = { name: site.name, code: site.code, categories };
+  try {
+    const form = new URLSearchParams();
+    form.append('payload', JSON.stringify({ paperLog: true, siteCode: site.code, meta, months }));
+    const resp = await fetch(site.scriptUrl, { method: 'POST', body: form });
+    let json = null;
+    try { json = await resp.json(); } catch(e) { /* backend may not return JSON — treat as success */ }
+    if (json && json.ok === false) {
+      showToast(verb + ' failed: ' + (json.error || 'unknown error'), 'error');
+      return;
+    }
+    if (json && json.data) _paperLogCache[site.id] = json.data;
+  } catch(e) {
+    showToast(verb + ' failed: ' + e.message, 'error');
+    return;
+  }
+
+  const monthCount = Object.keys(months).length;
+  const grandTotal = Object.values(months).reduce((sum,m) => sum + (m.total||0), 0);
+  let msg = `✓ ${verb} ${monthCount} month${monthCount!==1?'s':''} for ${site.name} — ${grandTotal} incident${grandTotal!==1?'s':''}`;
+  if (droppedList && droppedList.length) msg += `. Skipped unmatched: ${droppedList.slice(0,4).join(', ')}${droppedList.length>4?'…':''}`;
+  showToast(msg, droppedList && droppedList.length ? 'info' : 'success');
+
+  // Refresh whatever's currently on screen so the import shows up immediately
+  // if this site/month happens to already be selected.
+  if (document.getElementById('pl-site')) {
+    initPaperLog();
+    if (document.getElementById('pl-site').value === site.id) {
+      renderPaperLogGrid(site.id, currentPaperLogMonthStr());
+    }
+  }
+}
+
+// ── Monthly entry ──────────────────────────────────────────────────────────
+function initPaperLog() {
+  renderPaperLogSitesList();
+
+  const siteSel = document.getElementById('pl-site');
+  if (!siteSel) return;
+  const curVal = siteSel.value;
+  siteSel.innerHTML = '<option value="">— Select site —</option>';
+  getPaperLogSites().sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+    const o = Object.assign(document.createElement('option'), {value: s.id, textContent: s.name});
+    if (s.id === curVal) o.selected = true;
+    siteSel.appendChild(o);
+  });
+
+  const yearSel = document.getElementById('pl-year');
+  const curYear = new Date().getFullYear();
+  yearSel.innerHTML = '';
+  for (let y = curYear; y >= curYear - 5; y--) {
+    yearSel.appendChild(Object.assign(document.createElement('option'), {value: y, textContent: y}));
+  }
+
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('pl-month').value = months[new Date().getMonth()];
+
+  document.getElementById('pl-no-site').style.display = siteSel.value ? 'none' : 'block';
+  document.getElementById('pl-entry-wrap').style.display = 'none';
+  document.getElementById('pl-existing-warn').style.display = 'none';
+}
+
+function currentPaperLogMonthStr() {
+  return document.getElementById('pl-month').value + ' ' + document.getElementById('pl-year').value;
+}
+
+async function loadPaperLogMonth() {
+  const siteId = document.getElementById('pl-site').value;
+  if (!siteId) { showToast('Select a site first', 'error'); return; }
+  const site = sites.find(s => s.id === siteId);
+  if (!site) return;
+  _plHistoryOnly = false; // start showing the full category list each time a site/month is (re)loaded
+  if (!site.scriptUrl) {
+    showToast('This site has no Apps Script URL configured — set one in the list above', 'error');
+    return;
+  }
+
+  document.getElementById('pl-no-site').style.display = 'none';
+
+  try {
+    const url = site.scriptUrl + '?action=paperlog&siteCode=' + encodeURIComponent(site.code) + '&t=' + Date.now();
+    const resp = await fetch(url);
+    const json = await resp.json();
+    let payload;
+    if (json && json.ok && json.data && typeof json.data === 'object') {
+      payload = json.data;
+    } else {
+      // No paper log file yet for this site — perfectly normal on the first
+      // ever entry, start from an empty one rather than erroring.
+      payload = { meta: { name: site.name, code: site.code, categories: getFullCatsForSite(site).sections }, months: {} };
+    }
+    if (!payload.months) payload.months = {};
+    _paperLogCache[siteId] = payload;
+  } catch(e) {
+    showToast('Could not load paper log from cloud: ' + e.message, 'error');
+    return;
+  }
+
+  renderPaperLogGrid(siteId, currentPaperLogMonthStr());
+}
+
+function renderPaperLogGrid(siteId, monthStr, draftCounts) {
+  const site = sites.find(s => s.id === siteId);
+  if (!site) return;
+  const payload = _paperLogCache[siteId] || { meta: {}, months: {} };
+  const existing = payload.months[monthStr];
+
+  const warn = document.getElementById('pl-existing-warn');
+  if (existing) {
+    warn.style.display = 'block';
+    warn.innerHTML = `ℹ Data already recorded for ${monthStr}${existing.enteredAt ? ' (entered '+new Date(existing.enteredAt).toLocaleDateString('en-AU')+')' : ''}. Loaded below — saving will overwrite it.`;
+  } else {
+    warn.style.display = 'none';
+  }
+
+  const fullSections = paperLogEffectiveCats(site, payload);
+  const siteCodeUC = (site.code || '').toUpperCase();
+  const overrideSet = SITE_TYPE_OVERRIDES_LC[siteCodeUC.toLowerCase()] || new Set();
+
+  // The entry grid shows every category configured for this site
+  // (paperLogEffectiveCats, above, now pulls from the site's own cloud file
+  // rather than a possibly-missing local config) — including categories
+  // that have never had a count recorded yet, since a future month can
+  // always be the first time one is used. The "history only" link is an
+  // opt-in way to shorten the list down to just the categories that have
+  // actually shown up in this site's own saved months, for sites with a
+  // long configured list but a small day-to-day set.
+  const usedCats = new Set();
+  Object.values(payload.months || {}).forEach(m => Object.keys((m && m.counts) || {}).forEach(c => usedCats.add(c)));
+
+  let catSections = fullSections;
+  let filteredDown = false;
+  if (usedCats.size && _plHistoryOnly) {
+    const narrowed = {};
+    Object.entries(fullSections).forEach(([section, cats]) => {
+      const kept = cats.filter(c => usedCats.has(c));
+      if (kept.length) narrowed[section] = kept;
+    });
+    if (Object.keys(narrowed).length) { catSections = narrowed; filteredDown = true; }
+  }
+
+  const catsToggle = document.getElementById('pl-cats-toggle');
+  if (catsToggle) {
+    if (usedCats.size) {
+      catsToggle.style.display = 'inline';
+      catsToggle.textContent = _plHistoryOnly ? '(showing this site\'s historical categories only · show all)' : '(showing all categories · show history only)';
+    } else {
+      catsToggle.style.display = 'none';
+    }
+  }
+
+  const body = document.getElementById('pl-cats-body');
+  body.innerHTML = '';
+  // draftCounts (passed when re-rendering after the show-all/history-only
+  // toggle) takes priority so switching category views never discards counts
+  // the user already typed but hasn't saved yet.
+  const counts = draftCounts || (existing && existing.counts) || {};
+
+  Object.entries(catSections).forEach(([section, cats]) => {
+    // Same convention as Historical Data Entry — "Other" is normally
+    // operational/non-counted and skipped here, unless this specific site
+    // has an explicit override making one of its Other types a real,
+    // counted incident.
+    if (section === 'OTHER') {
+      cats = cats.filter(c => overrideSet.has(c.toLowerCase()));
+      if (!cats.length) return;
+    }
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:700;color:var(--dk-text3);text-transform:uppercase;letter-spacing:0.06em;padding:8px 0 4px;border-bottom:1px solid var(--dk-border);margin-top:8px;';
+    hdr.textContent = section;
+    body.appendChild(hdr);
+
+    cats.forEach(cat => {
+      const val = counts[cat] || 0;
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:center;gap:10px;background:#162230;border:1px solid #1e3040;border-radius:7px;padding:8px 12px;';
+      div.innerHTML = `
+        <label style="flex:1;font-size:13px;color:var(--dk-text);">${cat}</label>
+        <input type="number" min="0" max="999" value="${val}"
+          data-cat="${cat.replace(/"/g,'&quot;')}"
+          oninput="updatePaperLogTotal()"
+          style="width:70px;text-align:center;background:var(--dk-bg);border:1px solid #1e3040;color:var(--dk-text);padding:6px;border-radius:6px;font-size:14px;font-weight:700;">
+      `;
+      body.appendChild(div);
+    });
+  });
+
+  document.getElementById('pl-guards').value = (existing && existing.guards) || '';
+  document.getElementById('pl-grid-title').textContent = `Enter incident counts for ${monthStr} — ${site.name}`;
+  document.getElementById('pl-entry-wrap').style.display = 'block';
+  document.getElementById('pl-no-site').style.display = 'none';
+
+  const wufooBtn = document.getElementById('pl-wufoo-btn');
+  if (wufooBtn) wufooBtn.style.display = site.wufooFormId ? 'inline-block' : 'none';
+
+  updatePaperLogTotal();
+}
+
+// Flips between the full configured category list (default — includes
+// categories with no recorded history yet) and the narrowed, history-only
+// list, preserving whatever's currently typed but not yet saved so
+// switching views never loses in-progress entry.
+function togglePaperLogFullCats() {
+  const draft = {};
+  document.querySelectorAll('#pl-cats-body input[type="number"]').forEach(inp => {
+    const v = parseInt(inp.value || 0, 10);
+    if (v > 0) draft[inp.dataset.cat] = v;
+  });
+  _plHistoryOnly = !_plHistoryOnly;
+  const siteId = document.getElementById('pl-site').value;
+  if (!siteId) return;
+  renderPaperLogGrid(siteId, currentPaperLogMonthStr(), draft);
+}
+
+function updatePaperLogTotal() {
+  const inputs = document.querySelectorAll('#pl-cats-body input[type="number"]');
+  let total = 0;
+  inputs.forEach(inp => { total += parseInt(inp.value||0,10); });
+  document.getElementById('pl-total').textContent = total;
+}
+
+function clearPaperLogCounts() {
+  document.querySelectorAll('#pl-cats-body input[type="number"]').forEach(inp => { inp.value = 0; });
+  updatePaperLogTotal();
+}
+
+async function savePaperLogMonth() {
+  const siteId = document.getElementById('pl-site').value;
+  if (!siteId) { showToast('Select a site first', 'error'); return; }
+  const site = sites.find(s => s.id === siteId);
+  if (!site) return;
+  if (!site.scriptUrl) { showToast('This site has no Apps Script URL configured', 'error'); return; }
+
+  const monthStr = currentPaperLogMonthStr();
+  const inputs = document.querySelectorAll('#pl-cats-body input[type="number"]');
+  if (!inputs.length) { showToast('Load a month first', 'error'); return; }
+
+  const counts = {};
+  let total = 0;
+  inputs.forEach(inp => {
+    const v = parseInt(inp.value || 0, 10);
+    if (v > 0) counts[inp.dataset.cat] = v;
+    total += v;
+  });
+
+  const guards = document.getElementById('pl-guards').value.trim();
+  const monthRecord = { counts, total, enteredAt: new Date().toISOString(), guards };
+
+  // Keep whatever category list is already stored for this site (its own
+  // cloud file if loaded, else the local config) rather than always
+  // recomputing from the local entry-tool default — a plain Save Month must
+  // never silently overwrite a site's real imported/configured categories
+  // with the generic fallback list just because this browser has no local
+  // config cached for it.
+  const meta = { name: site.name, code: site.code, categories: paperLogEffectiveCats(site, _paperLogCache[siteId]) };
+
+  if (!_paperLogCache[siteId]) _paperLogCache[siteId] = { meta, months: {} };
+  _paperLogCache[siteId].meta = meta;
+  _paperLogCache[siteId].months[monthStr] = monthRecord;
+
+  try {
+    const form = new URLSearchParams();
+    form.append('payload', JSON.stringify({ paperLog: true, siteCode: site.code, meta, months: { [monthStr]: monthRecord } }));
+    const resp = await fetch(site.scriptUrl, { method: 'POST', body: form });
+    let json = null;
+    try { json = await resp.json(); } catch(e) { /* backend may not return JSON — treat as success */ }
+    if (json && json.ok === false) {
+      showToast('Save failed: ' + (json.error || 'unknown error'), 'error');
+      return;
+    }
+  } catch(e) {
+    showToast('Save failed: ' + e.message, 'error');
+    return;
+  }
+
+  showToast(`✓ Saved ${monthStr} — ${total} incident${total!==1?'s':''}`, 'success');
+  renderPaperLogGrid(siteId, monthStr);
+}
+
+// ── Pull from Wufoo (review-before-save, same spirit as Wufoo Sync Check) ──
+async function pullWufooForPaperLog() {
+  const siteId = document.getElementById('pl-site').value;
+  if (!siteId) { showToast('Select a site first', 'error'); return; }
+  const site = sites.find(s => s.id === siteId);
+  if (!site) return;
+  if (!site.wufooFormId) { showToast('This site has no Wufoo Form ID configured', 'error'); return; }
+  if (!site.scriptUrl)   { showToast('This site has no Apps Script URL configured', 'error'); return; }
+
+  const monthStr = currentPaperLogMonthStr();
+  const [month, yearStr] = monthStr.split(' ');
+  const year = parseInt(yearStr, 10);
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthIdx = MONTH_NAMES.indexOf(month);
+  const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+  const dateFrom = `${year}-${String(monthIdx+1).padStart(2,'0')}-01`;
+  const dateTo   = `${year}-${String(monthIdx+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+
+  showToast(`Pulling Wufoo reports for ${monthStr}…`, 'success');
+
+  let wufooEntries;
+  try {
+    const url = site.scriptUrl + '?action=wufoorange&formId=' + encodeURIComponent(site.wufooFormId)
+      + '&dateFrom=' + encodeURIComponent(dateFrom) + '&dateTo=' + encodeURIComponent(dateTo);
+    const resp = await fetch(url);
+    const json = await resp.json();
+    if (!json.ok) { showToast('Wufoo pull failed: ' + (json.error||'unknown error'), 'error'); return; }
+    wufooEntries = json.entries || [];
+  } catch(e) {
+    showToast('Wufoo pull failed: ' + e.message, 'error');
+    return;
+  }
+
+  if (!wufooEntries.length) {
+    showToast(`No Wufoo reports found for ${monthStr}`, 'error');
+    return;
+  }
+
+  // This site's real category names (what's actually in the grid below),
+  // flat + lowercase-keyed for exact matching, plus the section structure
+  // for the "which section is this probably" hint used as a default guess.
+  const fullSections = paperLogEffectiveCats(site, _paperLogCache[siteId]);
+  const realCatByLower = {};
+  Object.values(fullSections).forEach(catArr => catArr.forEach(c => { realCatByLower[c.toLowerCase()] = c; }));
+
+  // Reuse the existing keyword classifier purely to guess which SECTION an
+  // unrecognised raw type probably belongs to (not to name the category
+  // itself — Wufoo's free-text IncidentType rarely matches a category name
+  // exactly, which is the whole reason this needs a human decision).
+  const rawTypes = [...new Set(wufooEntries.map(e => (e.IncidentType||'').trim()).filter(Boolean))];
+  const syntheticArr = rawTypes.map(t => ({ type: t, siteCode: site.code }));
+  const { sections: classifiedSections } = getCatsForSite(syntheticArr, site.name);
+  const guessedSectionOf = {};
+  Object.entries(classifiedSections).forEach(([section, catArr]) => {
+    catArr.forEach(item => { guessedSectionOf[item.toLowerCase()] = section; });
+  });
+
+  const catMap = getPaperLogCatMap(site.code); // previously user-assigned raw -> real category
+
+  const tally = {};       // real category (lowercase) -> count, for anything already resolved
+  const needsReview = []; // [{raw, count, suggested}] for anything not yet resolved
+  rawTypes.forEach(raw => {
+    const rawLc = raw.toLowerCase();
+    const count = wufooEntries.filter(e => (e.IncidentType||'').trim().toLowerCase() === rawLc).length;
+    let resolvedCat = null;
+    if (realCatByLower[rawLc]) {
+      resolvedCat = realCatByLower[rawLc]; // exact match to a real category
+    } else if (catMap[rawLc] && realCatByLower[catMap[rawLc].toLowerCase()]) {
+      resolvedCat = realCatByLower[catMap[rawLc].toLowerCase()]; // previously assigned by the user
+    }
+    if (resolvedCat) {
+      const key = resolvedCat.toLowerCase();
+      tally[key] = (tally[key]||0) + count;
+    } else {
+      const guessSection = guessedSectionOf[rawLc];
+      const suggested = (guessSection && fullSections[guessSection] && fullSections[guessSection][0]) || '';
+      needsReview.push({ raw, count, suggested });
+    }
+  });
+
+  // Populate the grid with everything already resolved — the human reviews/
+  // adjusts before Save either way, same spirit as Wufoo Sync Check
+  // surfacing entries for review rather than silently importing them.
+  let matchedTotal = 0;
+  document.querySelectorAll('#pl-cats-body input[type="number"]').forEach(inp => {
+    const cat = (inp.dataset.cat||'').toLowerCase();
+    const v = tally[cat] || 0;
+    inp.value = v;
+    matchedTotal += v;
+  });
+  updatePaperLogTotal();
+
+  if (needsReview.length) {
+    openPaperLogCatModal(siteId, monthStr, needsReview, fullSections);
+    showToast(
+      `Pulled ${wufooEntries.length} Wufoo report${wufooEntries.length!==1?'s':''} — ${matchedTotal} matched a category below, ` +
+      `${needsReview.length} type${needsReview.length!==1?'s':''} need${needsReview.length!==1?'':'s'} a category assigned`,
+      'error'
+    );
+  } else {
+    showToast(`Pulled ${wufooEntries.length} Wufoo report${wufooEntries.length!==1?'s':''} — all matched a category below. Review, then click Save.`, 'success');
+  }
+}
+
+// ── Assign-categories modal: lets the user pick a real category for each
+// Wufoo IncidentType that didn't line up automatically, instead of those
+// reports silently going uncounted. Choices are remembered per site so the
+// same free-text type is only ever asked about once. ──────────────────────
+function openPaperLogCatModal(siteId, monthStr, rows, fullSections) {
+  _plPendingAssign = { siteId, monthStr, rows };
+
+  const sub = document.getElementById('pl-catassign-sub');
+  if (sub) sub.textContent = `${rows.length} Wufoo incident type${rows.length!==1?'s':''} for ${monthStr} don't match a known category for this site — choose one for each, or leave as "Don't count" to skip.`;
+
+  const optionsHtml = ['<option value="">— Don\'t count —</option>']
+    .concat(Object.entries(fullSections).flatMap(([section, cats]) =>
+      [`<optgroup label="${section.replace(/"/g,'&quot;')}">`]
+        .concat(cats.map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`))
+        .concat(['</optgroup>'])
+    )).join('');
+
+  const wrap = document.getElementById('pl-catassign-rows');
+  wrap.innerHTML = rows.map((r, i) => `
+    <div style="background:#13233f;border:1px solid #23385c;border-radius:9px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:180px;">
+        <div style="color:#eef2fa;font-size:13px;font-weight:700;">${(r.raw||'(blank)').replace(/</g,'&lt;')}</div>
+        <div style="color:#9fb0cc;font-size:11px;">${r.count} individual report${r.count!==1?'s':''}</div>
+      </div>
+      <select data-idx="${i}" class="pl-catassign-select" style="background:#0f1f3d;border:1px solid #23385c;color:#eef2fa;padding:8px 10px;border-radius:7px;font-size:13px;outline:none;color-scheme:dark;min-width:220px;">
+        ${optionsHtml}
+      </select>
+    </div>
+  `).join('');
+
+  // Pre-select each row's suggested category (still requires the human to
+  // confirm by hitting Apply — nothing is counted from a guess alone).
+  wrap.querySelectorAll('.pl-catassign-select').forEach(sel => {
+    const r = rows[parseInt(sel.dataset.idx, 10)];
+    if (r.suggested) sel.value = r.suggested;
+  });
+
+  document.getElementById('pl-catassign-modal').style.display = 'flex';
+}
+
+function closePaperLogCatModal() {
+  document.getElementById('pl-catassign-modal').style.display = 'none';
+  _plPendingAssign = null;
+}
+
+function applyPaperLogCatAssignments() {
+  if (!_plPendingAssign) { closePaperLogCatModal(); return; }
+  const { siteId, monthStr, rows } = _plPendingAssign;
+  const site = sites.find(s => s.id === siteId);
+  if (!site) { closePaperLogCatModal(); return; }
+
+  // Only apply if the grid still reflects the same site/month this
+  // classification was pulled for — the user could have switched away
+  // while the modal was open.
+  if (document.getElementById('pl-site').value !== siteId || currentPaperLogMonthStr() !== monthStr) {
+    showToast('Site or month changed since this Wufoo pull — pull again to assign categories.', 'error');
+    closePaperLogCatModal();
+    return;
+  }
+
+  const selects = document.querySelectorAll('#pl-catassign-rows .pl-catassign-select');
+  const catMap = getPaperLogCatMap(site.code);
+  const addTally = {}; // real category (lowercase) -> count to add on top of what's already in the grid
+  let assignedCount = 0, skippedCount = 0;
+
+  selects.forEach(sel => {
+    const r = rows[parseInt(sel.dataset.idx, 10)];
+    const chosen = sel.value;
+    if (!chosen) { skippedCount += r.count; return; }
+    addTally[chosen.toLowerCase()] = (addTally[chosen.toLowerCase()]||0) + r.count;
+    catMap[r.raw.toLowerCase()] = chosen; // remember this raw type -> category for next time
+    assignedCount += r.count;
+  });
+
+  savePaperLogCatMap(site.code, catMap);
+
+  document.querySelectorAll('#pl-cats-body input[type="number"]').forEach(inp => {
+    const cat = (inp.dataset.cat||'').toLowerCase();
+    if (addTally[cat]) inp.value = (parseInt(inp.value||0,10) + addTally[cat]);
+  });
+  updatePaperLogTotal();
+
+  closePaperLogCatModal();
+  showToast(
+    `Assigned ${assignedCount} report${assignedCount!==1?'s':''} to a category` +
+    (skippedCount>0 ? `, ${skippedCount} left uncounted` : '') +
+    `. Review the counts, then click Save.`,
+    'success'
+  );
+}
+
+// ── Report (reuses buildPDFReport — no separate report-building logic) ────
+async function generatePaperLogReport() {
+  const siteId = document.getElementById('pl-site').value;
+  if (!siteId) { showToast('Select a site first', 'error'); return; }
+  const site = sites.find(s => s.id === siteId);
+  if (!site) return;
+
+  const monthStr = currentPaperLogMonthStr();
+  let payload = _paperLogCache[siteId];
+
+  if (!payload) {
+    if (!site.scriptUrl) { showToast('Load this site\'s paper log first', 'error'); return; }
+    try {
+      const url = site.scriptUrl + '?action=paperlog&siteCode=' + encodeURIComponent(site.code) + '&t=' + Date.now();
+      const resp = await fetch(url);
+      const json = await resp.json();
+      payload = (json && json.ok && json.data && typeof json.data === 'object') ? json.data : { meta:{}, months:{} };
+      if (!payload.months) payload.months = {};
+      _paperLogCache[siteId] = payload;
+    } catch(e) {
+      showToast('Could not load paper log data: ' + e.message, 'error');
+      return;
+    }
+  }
+
+  if (!payload.months[monthStr]) {
+    showToast(`No saved data for ${monthStr} yet — save this month first`, 'error');
+    return;
+  }
+
+  const guardsInput = (document.getElementById('pl-guards')?.value || '').trim();
+  const guards = guardsInput || payload.months[monthStr].guards || '';
+
+  // Build a transient, in-memory, per-incident-SHAPED array covering every
+  // month on file — never persisted anywhere — purely so buildPDFReport()
+  // can do its own prior-month / rolling-12-month comparisons exactly like
+  // it does for real per-incident data. This is deliberately different from
+  // Historical Data's synthetic records, which ARE persisted.
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const syntheticAllData = [];
+  Object.entries(payload.months).forEach(([mStr, rec]) => {
+    const [mName, mYear] = mStr.split(' ');
+    const monthIdx = MONTH_NAMES.indexOf(mName);
+    const dateStr = monthIdx >= 0 ? `${mYear}-${String(monthIdx+1).padStart(2,'0')}-01` : `${mYear}-01-01`;
+    const counts = rec.counts || {};
+    Object.entries(counts).forEach(([cat, n]) => {
+      for (let i = 0; i < n; i++) {
+        syntheticAllData.push({
+          type: cat, secondary: '', date: dateStr, month: mStr, time: '',
+          officer: '', location: '', details: `Paper log — ${mStr}`, ref: '',
+          complete: 'Yes', site: site.name, siteCode: site.code, __paperLog__: true
+        });
+      }
+    });
+  });
+
+  buildPDFReport(site, syntheticAllData, monthStr, guards, { skipTimeCharts: true });
+}
 
 
 // ══ ALL FAULTS MODAL ════════════════════════════════════════════════════════
@@ -11482,7 +12486,7 @@ function renderReportsTab() {
 
 function switchReportTab(tab) {
   reportView = tab;
-  ['email','checkpoint','stats'].forEach(t => {
+  ['email','checkpoint','stats','paperlog'].forEach(t => {
     const sub = document.getElementById('report-sub-'+t);
     const btn = document.getElementById('report-tab-'+t);
     if (sub) sub.style.display = t === tab ? 'block' : 'none';
@@ -11490,6 +12494,7 @@ function switchReportTab(tab) {
       btn.style.borderColor = t === tab ? 'var(--dk-gold)' : 'var(--dk-border)';
     }
   });
+  if (tab === 'paperlog')   initPaperLog();
   if (tab === 'stats')      renderStatsPanel();
   if (tab === 'email')      { populateEmailSiteSelect(); populateEmailMonths(); }
   if (tab === 'checkpoint') loadCheckpointReport();

@@ -648,6 +648,7 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
       <div class="landing-hero-sub">Select a section to continue</div>
     </div>
     <div class="landing-grid">
+      <!-- Row 1 -->
       <div class="landing-tile" onclick="showTab('overview')">
         <div class="landing-tile-icon">🗂️</div>
         <div class="landing-tile-title">Site Logs/Reports</div>
@@ -658,11 +659,12 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
         <div class="landing-tile-title">Employment Applications</div>
         <div class="landing-tile-sub">View, reload and export applications submitted through the AMS employment application form</div>
       </div>
-      <div class="landing-tile" onclick="showTab('keyregisters')">
-        <div class="landing-tile-icon">🔑</div>
-        <div class="landing-tile-title">Key Registers</div>
-        <div class="landing-tile-sub">AMS Management key register — issue, return and track keys</div>
+      <div class="landing-tile" onclick="showTab('induction')">
+        <div class="landing-tile-icon">🎓</div>
+        <div class="landing-tile-title">Induction</div>
+        <div class="landing-tile-sub">View the guard induction or generate access codes for new staff</div>
       </div>
+      <!-- Row 2 -->
       <div class="landing-tile" onclick="showTab('employeefiles')">
         <div class="landing-tile-icon">🗄️</div>
         <div class="landing-tile-title">Employee Files</div>
@@ -673,13 +675,36 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
         <div class="landing-tile-title">Uniform Stock Lists</div>
         <div class="landing-tile-sub">Track uniform stock levels and issue history</div>
       </div>
+      <div class="landing-tile" onclick="showTab('keyregisters')">
+        <div class="landing-tile-icon">🔑</div>
+        <div class="landing-tile-title">Key Registers</div>
+        <div class="landing-tile-sub">AMS Management key register — issue, return and track keys</div>
+      </div>
+      <!-- Row 3 -->
+      <div class="landing-tile" onclick="showTab('siteinfo')">
+        <div class="landing-tile-icon">🏢</div>
+        <div class="landing-tile-title">Site Info</div>
+        <div class="landing-tile-sub">Site-specific information, contacts and procedures</div>
+      </div>
+      <div class="landing-tile" onclick="showTab('otherdocs')">
+        <div class="landing-tile-icon">📂</div>
+        <div class="landing-tile-title">Other Documents</div>
+        <div class="landing-tile-sub">Additional AMS forms, templates and reference documents</div>
+      </div>
       <div class="landing-tile" onclick="openPolicyHub()">
         <div class="landing-tile-icon">📜</div>
         <div class="landing-tile-title">Policies &amp; Procedures</div>
         <div class="landing-tile-sub">Operational Procedures, WHS, HR, Environmental &amp; Compliance — live SharePoint-hosted hub</div>
       </div>
     </div>
-    <div class="landing-admin-link" onclick="showTab('accesssetup')">🔐 Admin — configure page access &amp; URLs</div>
+    <!-- 10th tile centred below the 3x3 grid -->
+    <div style="display:flex;justify-content:center;margin-top:20px;">
+      <div class="landing-tile" onclick="showTab('accesssetup')" style="width:calc(33.333% - 14px);">
+        <div class="landing-tile-icon">⚙️</div>
+        <div class="landing-tile-title">Admin Config</div>
+        <div class="landing-tile-sub">Configure page access, URLs and data connections</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1584,6 +1609,8 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
   </div>
 
   <!-- Existing records warning -->
+  <div id="hist-config-warn" style="display:none;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#F5C26B;"></div>
+  <input type="file" id="hist-config-file" accept=".json" style="display:none;" onchange="(function(inp){const site=sites.find(s=>s.id===document.getElementById('hist-site').value);const f=inp.files[0];inp.value='';if(!site||!f)return;importSiteConfigFile(f,{expectCode:site.code,onDone:loadHistoricalCounts});})(this)">
   <div id="hist-existing-warn" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#F0997B;"></div>
 
   <!-- Category counts grid -->
@@ -1595,6 +1622,7 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
       <div style="margin-left:auto;display:flex;gap:10px;">
         <button onclick="clearHistoricalCounts()" class="dk-btn" style="font-size:13px;">Clear All</button>
         <button onclick="deleteHistoricalMonth()" class="dk-btn" style="font-size:13px;color:#F0997B;border-color:rgba(239,68,68,0.3);">🗑 Delete Historical Records for this Month</button>
+        <button onclick="deleteAllRecordsForMonth()" class="dk-btn" style="font-size:13px;color:#ef4444;border-color:rgba(239,68,68,0.5);" title="Removes every record for this month — guard-entered and historical — so you can re-enter correct counts">🗑 Delete ALL Records for this Month</button>
         <button onclick="saveHistoricalData()" style="background:#1d9e75;color:#000;border:none;border-radius:8px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;">💾 Save Historical Data</button>
       </div>
     </div>
@@ -1828,6 +1856,120 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
   <iframe id="apps-iframe" title="Employment Applications" style="width:100%;height:calc(100vh - 210px);min-height:520px;border:1px solid var(--dk-border);border-radius:8px;background:#eef2f7;"></iframe>
 </div>
 
+
+
+<!-- ═══ SITE INFO ═══ -->
+<div class="panel dark-panel" id="panel-siteinfo" style="background:var(--dk-bg);min-height:calc(100vh - 110px);padding:24px 32px;">
+  <div style="max-width:900px;margin:0 auto;">
+    <div class="page-hdr" style="margin-bottom:28px;">
+      <div>
+        <div class="page-title" style="color:var(--dk-text);font-size:22px;">🏢 Site Info</div>
+        <div class="page-sub" style="color:var(--dk-text2);">Site-specific information, contacts and procedures.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="dk-btn" onclick="showTab('landing')">🏠 Back to Menu</button>
+      </div>
+    </div>
+    <div style="background:#162230;border:1px solid #1e3040;border-radius:14px;padding:48px 32px;text-align:center;color:#64748b;">
+      <div style="font-size:48px;margin-bottom:16px;">🏢</div>
+      <div style="font-size:16px;font-weight:600;color:#94a3b8;margin-bottom:8px;">Coming Soon</div>
+      <div style="font-size:14px;line-height:1.6;">Site information and contacts will be available here.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ OTHER DOCUMENTS ═══ -->
+<div class="panel dark-panel" id="panel-otherdocs" style="background:var(--dk-bg);min-height:calc(100vh - 110px);padding:24px 32px;">
+  <div style="max-width:900px;margin:0 auto;">
+    <div class="page-hdr" style="margin-bottom:28px;">
+      <div>
+        <div class="page-title" style="color:var(--dk-text);font-size:22px;">📂 Other Documents</div>
+        <div class="page-sub" style="color:var(--dk-text2);">Additional AMS forms, templates and reference documents.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="dk-btn" onclick="showTab('landing')">🏠 Back to Menu</button>
+      </div>
+    </div>
+    <div style="background:#162230;border:1px solid #1e3040;border-radius:14px;padding:48px 32px;text-align:center;color:#64748b;">
+      <div style="font-size:48px;margin-bottom:16px;">📂</div>
+      <div style="font-size:16px;font-weight:600;color:#94a3b8;margin-bottom:8px;">Coming Soon</div>
+      <div style="font-size:14px;line-height:1.6;">Additional documents and templates will be available here.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GUARD INDUCTION ═══ -->
+<div class="panel dark-panel" id="panel-induction" style="background:var(--dk-bg);min-height:calc(100vh - 110px);padding:24px 32px;">
+  <div style="max-width:900px;margin:0 auto;">
+    <div class="page-hdr" style="margin-bottom:28px;">
+      <div>
+        <div class="page-title" style="color:var(--dk-text);font-size:22px;">🎓 Induction</div>
+        <div class="page-sub" style="color:var(--dk-text2);">View the guard induction or generate an access code for a new staff member.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="dk-btn" onclick="showTab('landing')">🏠 Back to Menu</button>
+      </div>
+    </div>
+
+    <div id="ind-choice-tiles" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px;">
+      <div onclick="openInductionPreview()" style="background:#162230;border:1px solid #1e3040;border-radius:14px;padding:38px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;cursor:pointer;transition:all .18s;box-shadow:0 2px 10px rgba(0,0,0,.3);" onmouseover="this.style.borderColor='#5dcaa5';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='#1e3040';this.style.transform=''">
+        <div style="font-size:42px;">👁️</div>
+        <div style="font-size:16px;font-weight:700;color:#e2e8f0;">View Induction</div>
+        <div style="font-size:13px;color:#64748b;line-height:1.5;">Open the induction as a manager — no access code required</div>
+      </div>
+      <div onclick="showIndCodeGenerator()" style="background:#162230;border:1px solid #1e3040;border-radius:14px;padding:38px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;cursor:pointer;transition:all .18s;box-shadow:0 2px 10px rgba(0,0,0,.3);" onmouseover="this.style.borderColor='#5dcaa5';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='#1e3040';this.style.transform=''">
+        <div style="font-size:42px;">🎓</div>
+        <div style="font-size:16px;font-weight:700;color:#e2e8f0;">Generate Induction &amp; Access Code</div>
+        <div style="font-size:13px;color:#64748b;line-height:1.5;">Download the induction file, issue an access code, and generate the candidate email</div>
+      </div>
+    </div>
+
+    <div id="ind-codegen-section" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <button onclick="hideIndCodeGenerator()" style="background:none;border:1px solid #1e3040;color:#64748b;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s;" onmouseover="this.style.borderColor='#5dcaa5';this.style.color='#5dcaa5'" onmouseout="this.style.borderColor='#1e3040';this.style.color='#64748b'">← Back</button>
+        <div style="font-size:15px;font-weight:600;color:var(--dk-text);">Generate Induction &amp; Access Code</div>
+      </div>
+      <div class="access-card" style="margin-bottom:20px;">
+        <div class="access-card-title">🔐 Issue New Induction Code</div>
+        <label class="access-field-lbl">Guard Full Name</label>
+        <input type="text" id="ind-guard-name" class="access-input" placeholder="e.g. John Smith" autocomplete="off" onkeydown="if(event.key==='Enter') generateInductionCode()">
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center;">
+          <button class="dk-btn primary" onclick="generateInductionCode()" id="ind-gen-btn">⚡ Generate Code</button>
+          <div id="ind-spinner" style="display:none;font-size:13px;color:var(--dk-text2);">Writing to sheet…</div>
+        </div>
+      </div>
+      <div id="ind-result" style="display:none;">
+        <div class="access-card" style="border-color:#5dcaa5;">
+          <div class="access-card-title" style="color:#5dcaa5;">✅ Code Generated Successfully</div>
+          <div style="text-align:center;margin:16px 0;">
+            <div style="font-size:13px;color:var(--dk-text2);margin-bottom:8px;">Access Code</div>
+            <div id="ind-code-display" style="font-family:'Courier New',monospace;font-size:32px;font-weight:700;color:#fff;letter-spacing:4px;background:#0d1b2a;border:1px solid #1e3040;border-radius:10px;padding:16px 24px;display:inline-block;"></div>
+            <button onclick="copyInductionCode()" style="display:block;margin:10px auto 0;background:none;border:1px solid #1e3040;color:var(--dk-text2);padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;" onmouseover="this.style.borderColor='#5dcaa5';this.style.color='#5dcaa5'" onmouseout="this.style.borderColor='#1e3040';this.style.color='var(--dk-text2)'">📋 Copy Code</button>
+          </div>
+          <div style="background:#0d1b2a;border:1px solid #1e3040;border-radius:8px;padding:14px 16px;font-size:13px;color:var(--dk-text2);margin-top:4px;">
+            <div style="margin-bottom:6px;"><span style="color:var(--dk-text);">Guard:</span> <span id="ind-result-name" style="color:#fff;font-weight:600;"></span></div>
+            <div style="margin-bottom:6px;"><span style="color:var(--dk-text);">Issued:</span> <span id="ind-result-date"></span></div>
+            <div><span style="color:var(--dk-text);">Expires:</span> <span id="ind-result-expiry" style="color:#f59e0b;"></span></div>
+          </div>
+          <div style="margin-top:16px;">
+            <div style="font-size:12px;font-weight:600;color:var(--dk-text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Email snippet</div>
+            <div id="ind-email-snippet" style="background:#0d1b2a;border:1px solid #1e3040;border-radius:8px;padding:14px 16px;font-size:13px;color:var(--dk-text);line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto;"></div>
+            <button onclick="copyEmailSnippet()" style="margin-top:8px;background:none;border:1px solid #1e3040;color:var(--dk-text2);padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;" onmouseover="this.style.borderColor='#5dcaa5';this.style.color='#5dcaa5'" onmouseout="this.style.borderColor='#1e3040';this.style.color='var(--dk-text2)'">📋 Copy Email Snippet</button>
+          </div>
+          <button onclick="downloadInduction(event)" style="margin-top:16px;width:100%;padding:12px;background:linear-gradient(135deg,#1a4a2e,#16a34a);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all .25s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">⬇️ &nbsp; Download Induction File</button>
+          <button onclick="resetInductionGenerator()" style="margin-top:10px;background:none;border:1px solid #1e3040;color:var(--dk-text2);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;transition:all .2s;" onmouseover="this.style.borderColor='#5dcaa5'" onmouseout="this.style.borderColor='#1e3040'">+ Generate Another Code</button>
+        </div>
+      </div>
+      <div id="ind-error" style="display:none;" class="access-card">
+        <div style="color:#ef4444;font-size:14px;" id="ind-error-msg"></div>
+      </div>
+      <div style="background:#0d1b2a;border:1px solid #1e3040;border-radius:10px;padding:16px 20px;margin-top:8px;font-size:13px;color:var(--dk-text2);line-height:1.7;">
+        <strong style="color:var(--dk-text);">How it works:</strong> Each code is unique and valid for <strong style="color:#fff;">14 days</strong>. The guard enters it when they open the induction file.
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ KEY REGISTERS (placeholder) ═══ -->
 <div class="panel dark-panel" id="panel-keyregisters" style="background:var(--dk-bg);min-height:calc(100vh - 110px);padding:24px 32px;">
   <div style="max-width:1500px;margin:0 auto;">
@@ -1907,6 +2049,17 @@ table.dk-rtbl tr.grand td{background:var(--dk-gold)!important;color:#0a0e14!impo
     <div class="access-card-title">📊 Wufoo Report Viewer</div>
     <label class="access-field-lbl">Wufoo Viewer URL</label>
     <input type="text" id="cfg-wufoo-viewer-url" class="access-input" placeholder="https://..." autocomplete="off">
+  </div>
+
+  <div class="access-card">
+    <div class="access-card-title">🎓 Induction File</div>
+    <div style="font-size:13px;color:var(--dk-text2);margin-bottom:14px;line-height:1.6;">Upload <strong style="color:var(--dk-text);">AMS_Induction.html</strong> here once. It is stored in this browser so you can view it as a manager or download and email it to candidates at any time.</div>
+    <div id="ind-file-status" style="margin-bottom:14px;font-size:13px;color:var(--dk-text2);">No file loaded.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <button class="dk-btn primary" onclick="document.getElementById('ind-file-input').click()">⬆️ Upload AMS_Induction.html</button>
+      <button class="dk-btn" onclick="clearInductionFile()" style="color:#d85a30;border-color:rgba(216,90,48,0.3);">🗑 Remove</button>
+    </div>
+    <input type="file" id="ind-file-input" accept=".html" style="display:none" onchange="loadInductionFile(this)">
   </div>
 
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
@@ -3620,6 +3773,20 @@ const SITE_TYPE_OVERRIDES_LC = Object.fromEntries(
 // its site_config_*.json and re-importing — is excluded from that site's
 // stats, matching how the entry tool itself treats its OTHER section as
 // non-counted/operational.
+// Normalises a category/type label for comparison — case-insensitive, with
+// dash variants (en dash "–", em dash "—", minus sign) and repeated
+// whitespace collapsed to a single hyphen/space. Shared by isExcluded() and
+// getCatsForSite() so a harmless punctuation difference between a site's
+// imported config and its actually-logged data is never treated as a
+// meaningful mismatch in either place.
+function normCatText(s) {
+  return (s || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[‐-―−]/g, '-')
+    .replace(/\s+/g, ' ');
+}
+
 const _siteOtherTypesCache = {};
 function getSiteOtherTypes(siteCode) {
   if (!siteCode) return null;
@@ -3632,11 +3799,38 @@ function getSiteOtherTypes(siteCode) {
       const parsed = JSON.parse(raw);
       const otherKey = Object.keys(parsed || {}).find(k => k.trim().toUpperCase() === 'OTHER');
       if (otherKey && Array.isArray(parsed[otherKey])) {
-        result = new Set(parsed[otherKey].map(t => (t||'').toLowerCase()));
+        result = new Set(parsed[otherKey].map(t => normCatText(t)));
       }
     }
   } catch(e) { /* leave as null, falls through to normal exclusion rules */ }
   _siteOtherTypesCache[key] = result;
+  return result;
+}
+
+// A site's own imported NON-Other categories (e.g. Burnside's High/Medium/Low
+// Priority lists) — these are genuine, counted incident types by definition,
+// so a type that exactly matches one of them must never be silently dropped
+// by the generic OPERATIONAL_KEYWORDS substring guess below (e.g. Burnside's
+// real "Theft – customer / staff / contractor / mall" category was being
+// excluded from every report because its text happens to contain the
+// substring "contractor").
+const _siteRealCatsCache = {};
+function getSiteRealCatTypes(siteCode) {
+  if (!siteCode) return null;
+  const key = siteCode.toUpperCase();
+  if (key in _siteRealCatsCache) return _siteRealCatsCache[key];
+  let result = null;
+  try {
+    const raw = localStorage.getItem('ams_entry_cats_' + key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const types = Object.entries(parsed || {})
+        .filter(([sec]) => sec.trim().toUpperCase() !== 'OTHER')
+        .flatMap(([, arr]) => Array.isArray(arr) ? arr : []);
+      if (types.length) result = new Set(types.map(t => normCatText(t)));
+    }
+  } catch(e) { /* leave as null, falls through to normal exclusion rules */ }
+  _siteRealCatsCache[key] = result;
   return result;
 }
 
@@ -3645,6 +3839,7 @@ function isExcluded(type, siteCode) {
   const t = type.trim();
   if (!t) return true;
   const tl = t.toLowerCase();
+  const tn = normCatText(t);
   // Site-specific override takes priority — if this site counts this type
   // as a real incident, it's never excluded for that site, full stop.
   if (siteCode && SITE_TYPE_OVERRIDES_LC[siteCode.toLowerCase()]?.has(tl)) return false;
@@ -3652,18 +3847,212 @@ function isExcluded(type, siteCode) {
   // if this site's config puts this type under Other, it's excluded for
   // this site regardless of what the shared blacklist below says.
   const siteOther = getSiteOtherTypes(siteCode);
-  if (siteOther && siteOther.has(tl)) return true;
+  if (siteOther && siteOther.has(tn)) return true;
+  // A site's own imported REAL (non-Other) categories are never excluded —
+  // exact membership in the site's own declared incident list is
+  // authoritative over the generic blacklist/keyword heuristics below,
+  // which exist only to catch naming variants for sites with no config of
+  // their own.
+  const siteRealCats = getSiteRealCatTypes(siteCode);
+  if (siteRealCats && siteRealCats.has(tn)) return false;
   // Blacklist: exclude known operational/admin entries (case-insensitive).
   if (EXCLUDED_TYPES_LC.has(tl)) return true;
+  // Auto-logged register entries (Isolation/Equipment/Key/Permit/Lost
+  // Property/AAS/Workplace Injury/Test Entry) — same list used by the
+  // "total record count" tallies elsewhere. These were falling through to
+  // "counted" here because neither EXCLUDED_TYPES_LC nor OPERATIONAL_KEYWORDS
+  // actually covered them (e.g. "isolation logged" doesn't match the
+  // "fire isolation" keyword), so they were inflating monthly stats.
+  if (REGISTER_LINKED_TYPES_LC.has(tl)) return true;
   // Keyword fallback for naming variants not covered above.
   if (OPERATIONAL_KEYWORDS.some(k => tl.includes(k))) return true;
   // Everything else is treated as a security incident so no legitimate
   // incident type is ever silently dropped due to a missing whitelist entry.
   return false;
 }
+
+// ── Report category matching ─────────────────────────────────────────────────
+// Reports (monthly, YTD, PDF, batch, overview counts) must only show the
+// categories declared in each site's own imported config. Logged entries
+// whose type is worded slightly differently from a config category (older
+// names, plurals, dash/punctuation differences, "&" vs "and", typos) are
+// folded into the closest config category; anything that can't be matched
+// to a config category is left out of the reports. The incident log itself
+// still shows the raw entries untouched.
+const _siteCatMatchCache = {};   // { CODE: { cats:[...], memo:{ rawNorm: canonical|null } } }
+
+const _CAT_STOPWORDS = new Set(['a','an','the','of','from','to','by','in','on','and','or','with','at','for']);
+const _CAT_GENERIC = new Set(['incident','activity','person','people','issue','report','event','other','related','general','minor','customer','staff']);
+function _catWords(s) {
+  return normCatText(s)
+    .replace(/&/g, ' and ')
+    .replace(/[-\/\\|,.:;()'"!?+]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map(w => (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) ? w.slice(0, -1) : w);
+}
+function _catKey(s)     { return _catWords(s).join(' '); }
+function _catCompact(s) { return _catWords(s).join(''); }
+function _catTokens(s)  { return _catWords(s).filter(w => !_CAT_STOPWORDS.has(w)); }
+
+function _levRatio(a, b) {
+  if (a === b) return 1;
+  if (!a.length || !b.length) return 0;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return 1 - prev[b.length] / Math.max(a.length, b.length);
+}
+
+// Known renames between older logged wording and current config wording.
+// Only used when the target actually exists in the site's config.
+const CAT_ALIASES = [
+  ['Carpark Incident',          ['Minor Car Park Incident', 'Car Park Incident']],
+  ['Disruptive Behaviour',      ['Anti-Social Behaviour', 'Antisocial Behaviour']],
+  ['Fire Alarms',               ['Fire Alarm Activation — Confirmed', 'Fire Alarm Activation']],
+  ['Lift Entrapment / Stopped', ['Lift Entrapment / Stopped Lift']],
+  ['Lost Child / Person',       ['Lost Child / Vulnerable Person']],
+  ['Medical Condition',         ['Medical / First Aid — Non Life Threatening', 'Medical / First Aid']],
+  ['Power Interruption',        ['Critical Infrastructure Failure / Power Interruption']],
+  ['Property Damage, Vandalism',['Property Damage / Vandalism']],
+  ['Suspect Persons',           ['Suspicious Person / Activity', 'Suspect Person / Activity']],
+  ['Tenants Alarm',             ['Tenancy Alarm']],
+  ['Weather Event',             ['Weather Related Incident']],
+  ['Sign In Key/Fob',           ['Sign In Keys / Fob']],
+  ['Sign Out Key/Fob',          ['Sign Out Keys / Fob']],
+  ['Shoplifting',               ['Theft from Retailer']],
+  ['Stolen Property',           ['Theft — Customer / Staff / Contractor / Mall']],
+  ['Drug Influence / Sharps',   ['Drug Related Activity']],
+  ['Public Liability Incident', ['Slip / Trip / Fall — Customer']],
+  ['Tenant',                    ['Tenants']],
+  ['Customer',                  ['Other']],
+].map(([from, tos]) => [_catKey(from), tos.map(_catKey)]);
+
+function _getSiteCatMatcher(siteCode) {
+  if (!siteCode) return null;
+  const key = siteCode.toUpperCase();
+  if (key in _siteCatMatchCache) return _siteCatMatchCache[key];
+  let result = null;
+  try {
+    const raw = localStorage.getItem('ams_entry_cats_' + key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const cats = [];
+      const seen = new Set();
+      Object.values(parsed || {}).forEach(arr => {
+        (Array.isArray(arr) ? arr : []).forEach(c => {
+          const name = (c || '').toString().trim();
+          const k = _catKey(name);
+          if (name && !seen.has(k)) {
+            seen.add(k);
+            cats.push({ name, key: k, compact: _catCompact(name), tokens: _catTokens(name) });
+          }
+        });
+      });
+      if (cats.length) result = { cats, memo: {} };
+    }
+  } catch(e) { /* no config — reports fall back to the old behaviour */ }
+  _siteCatMatchCache[key] = result;
+  return result;
+}
+
+// Returns the site's config category name that best matches `type`, or null
+// if nothing in the config is close enough. Returns undefined if the site
+// has no imported config at all (caller should leave the record alone).
+function mapTypeToSiteCat(type, siteCode) {
+  const m = _getSiteCatMatcher(siteCode);
+  if (!m) return undefined;
+  const raw = (type || '').toString().trim();
+  if (!raw) return null;
+  const tKey = _catKey(raw);
+  if (tKey in m.memo) return m.memo[tKey];
+
+  const tCompact = _catCompact(raw);
+  const tTokens  = _catTokens(raw);
+  const aliasTargets = (CAT_ALIASES.find(([from]) => from === tKey) || [null, []])[1];
+
+  let best = null, bestScore = 0;
+  for (const c of m.cats) {
+    let score = 0;
+    if (c.key === tKey || c.compact === tCompact) score = 1;
+    else if (aliasTargets.includes(c.key)) score = 0.99;
+    else {
+      const lev = _levRatio(tCompact, c.compact);
+      if (lev >= 0.8) score = Math.max(score, lev * 0.95);
+      if (tTokens.length && c.tokens.length) {
+        const setT = new Set(tTokens), setC = new Set(c.tokens);
+        const shared = [...setT].filter(w => setC.has(w));
+        const inter = shared.length;
+        // Sharing only a generic word ("incident", "person"…) isn't a match.
+        if (shared.every(w => _CAT_GENERIC.has(w))) { /* no token credit */ }
+        else {
+        const dice  = (2 * inter) / (setT.size + setC.size);
+        const subset = inter === Math.min(setT.size, setC.size);
+        if (subset && inter > 0) score = Math.max(score, 0.7 + 0.2 * dice);
+        else if (dice >= 0.6)    score = Math.max(score, dice * 0.9);
+        }
+      }
+      if (Math.min(tCompact.length, c.compact.length) >= 5 &&
+          !tTokens.every(w => _CAT_GENERIC.has(w)) && !c.tokens.every(w => _CAT_GENERIC.has(w)) &&
+          (c.compact.includes(tCompact) || tCompact.includes(c.compact))) {
+        score = Math.max(score, 0.75);
+      }
+    }
+    if (score > bestScore) { bestScore = score; best = c.name; }
+  }
+  const out = bestScore >= 0.6 ? best : null;
+  m.memo[tKey] = out;
+  return out;
+}
+
+// Rewrites a site's records for reporting: each type/secondary is replaced
+// by its matching config category name, and records whose type matches no
+// config category are dropped. Sites without an imported config are
+// returned unchanged. Never mutates the original records.
+function canonicaliseForReports(data, siteCode) {
+  if (!Array.isArray(data) || !data.length) return data || [];
+  const out = [];
+  for (const r of data) {
+    const code = siteCode || r.siteCode;
+    const t = mapTypeToSiteCat(r.type, code);
+    if (t === undefined) { out.push(r); continue; }   // no config for this site
+    if (!t) continue;                                   // not a config category
+    let sec = r.secondary;
+    if (sec) {
+      const s2 = mapTypeToSiteCat(sec, code);
+      sec = s2 || '';
+    }
+    out.push(Object.assign({}, r, { type: t, secondary: sec, siteCode: siteCode || r.siteCode || code, _origType: r.type, _origSecondary: r.secondary || '' }));
+  }
+  return out;
+}
+
+// Records for a site's reports: config categories only, operational/Other
+// entries removed.
+function getReportData(site) {
+  if (!site) return [];
+  const code = (site.code || '').toUpperCase();
+  return canonicaliseForReports(site.data || [], code)
+    .filter(r => !isExcluded(r.type, code || r.siteCode));
+}
+
 const MONTHS_NAMES  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CHART_COLORS  = ['#3b82f6','#f59e0b','#ef4444','#10b981','#8b5cf6','#f97316','#06b6d4','#94a3b8','#ec4899','#84cc16','#14b8a6','#f43f5e'];
 
+// NOTE: previously had several categories listed twice within the same
+// section (e.g. "Disturbances (Assaults)", "Drug / Alcohol Related",
+// "Offenders Detained", "Vehicle Theft", "Vehicle Accident", "Motor Vehicle
+// Accident & Damage", "Damage to Water Pipes") — harmless for isExcluded()
+// matching, but caused visible duplicate rows anywhere this list is rendered
+// directly, e.g. Historical Data Entry for a site with no imported config of
+// its own. De-duplicated below, order otherwise preserved.
 const DEFAULT_CATS = {
   'GENERAL SECURITY': [
     'Attempted Theft','Banned Offender','Disturbances (Assaults)','Drug / Alcohol Related',
@@ -3676,12 +4065,10 @@ const DEFAULT_CATS = {
     'Anti-Social Behaviour','Assault','Assault on Security Officers',
     'General Theft','General Security Incidents','General Security',
     'Intoxication/Alcohol','Intoxication','Shop Disturbance',
-    'Disturbances (Assaults)','Drug / Alcohol Related','Offenders Detained',
     'Burglary','Break & Enter from a Retailer','Break & Enter from a Vehicle',
     'Drug Use/Needles Found','Drug Influence / Sharps','Malicious Damage',
     'Malicious Damage /Graffiti','Non-Malicious Damage','Property Damage',
-    'Centre Property Damage','Graffiti',
-    'Motor Vehicle Accident & Damage','Vehicle Accident','Vehicle Incident','Vehicle Theft',
+    'Centre Property Damage','Graffiti','Vehicle Incident',
     'Theft from a Vehicle & Break-in/Damage',
     'Lost Child/Person','Maintenance','Other',
   ],
@@ -3690,7 +4077,7 @@ const DEFAULT_CATS = {
     'Damage to Water Pipes','Fire/Fire Alarms','Fire / Fire Alarms',
     'Gas Leaks','Person/s Trapped in Lift','Power Outage','Structural Collapses',
     'First Aid & Related','First Aids & Related','First Aids & Related Incidents',
-    'Damage to Water Pipes','Power Interruption','Damage to Fire Sprinkler System',
+    'Power Interruption','Damage to Fire Sprinkler System',
   ],
   'GUARD INTERVENTION': [
     'Prevented By Guard (Disturbance & Theft)','Prevented by Guard (Disturbance & Theft)',
@@ -3707,15 +4094,90 @@ const DEFAULT_CATS = {
   ]
 };
 
-// Burnside-specific category structure
+// Burnside-specific category structure — kept in sync with site_config_burnsideNEW.json
+// (70 categories: 54 incident types across High/Medium/Low Priority + 16 OTHER).
+// This is only used as a fallback when no config has been imported for Burnside
+// on a given machine — once "Import Site Config" is run, the site's own imported
+// categories (ams_entry_cats_BURNSIDE in localStorage) take priority over this.
 const BURNSIDE_CATS = {
-  'HIGH PRIORITY':   ['Assault','Gang Activity','Sexual Offences','Robbery','Shop Break-ins','Major Drug Activities / OD','Deceased Person'],
-  'MEDIUM PRIORITY': ['Drug Influence / Sharps','Shoplifting','Stolen Property','Property Damage','Vandalism','Suspect Persons','Disruptive Behaviour'],
-  'LOW PRIORITY':    ['Fire Alarms','Power Interruption','Tenants Alarm','Unsecured Tenancy','Lost Child / Person','Lift Entrapment / Stopped','Public Liability Incident','Weather Event','Carpark Incident','Medical Condition'],
-  'OTHER':           ['Sign On','Sign Off','CCTV','Contractor','Customer','Delivery','Fire Isolations','Hoarding','Lock-up','Other','Patrol','Permit','SAPOL','Sign In Key/Fob','Sign Out Key/Fob','Tenant','Unlock',
-    'Isolation Logged','Isolation Restored','Equipment Isolated','Equipment Restored',
-    'Key Issued','Key Returned','Permit Issued','Permit Closed',
-    'Lost Property Found','Lost Property Moved','Acts Against Security','Workplace Injury','Test Entry'],
+  'HIGH PRIORITY': [
+    'Active Armed Offender / Lockdown',
+    'Armed Robbery',
+    'Bomb Threat / Suspicious Package',
+    'Break-in or Attempted Break-in — Centre',
+    'Break-in or Attempted Break-in — Tenancy',
+    'Drug Related Activity',
+    'Hazardous Material / Gas Leak',
+    'Major Fire',
+    'Serious Life Threatening Injury / Deceased Person',
+    'Structural Damage',
+    'Weapon Involved / Credible Weapon Threat',
+  ],
+  'MEDIUM PRIORITY': [
+    'Aggressive / Threatening Behaviour',
+    'Anti-Social Behaviour',
+    'Assault',
+    'Attempted Theft / Guard Prevented Theft',
+    'Critical Infrastructure Failure / Power Interruption',
+    'Domestic and Family Violence Incident',
+    'Drug Influence / Sharps',
+    'Fire Alarm Activation — Confirmed',
+    'Intoxicated / Impaired Person',
+    'Lift Entrapment / Stopped Lift',
+    'Lost Child / Vulnerable Person',
+    'Medical / Mental Health / Welfare Incident',
+    'Property Damage / Vandalism',
+    'Security System Failure — CCTV / Access Control',
+    'Shoplifting',
+    'Stolen Property',
+    'Suspect Person / Activity',
+    'Theft from Motor Vehicle',
+    'Theft from Retailer',
+    'Theft — Customer / Staff / Contractor / Mall',
+    'Traffic Management Issue',
+    'Trespass / Refusal to Leave',
+    'Vehicle Collision — Vehicle vs Building',
+    'Vehicle Collision — Vehicle vs Pedestrian',
+    'Vehicle Collision — Vehicle vs Vehicle',
+  ],
+  'LOW PRIORITY': [
+    'Banned Offender on Site',
+    'Contractor Operational Incident',
+    'False Alarm / System Fault / False Activation',
+    'Graffiti',
+    'Lift / Escalator / Travelator / Automatic Door Incident',
+    'Lost / Found Property',
+    'Medical / First Aid — Non Life Threatening',
+    'Minor Car Park Incident',
+    'Near Miss / Hazard — Public Area',
+    'Near Miss / Hazard — Retailer / Contractor',
+    'Noise Complaint',
+    'Public Liability Incident',
+    'Sharps / Needles',
+    'Slip / Trip / Fall — Customer',
+    'Tenancy Alarm',
+    'Unsecured Tenancy',
+    'Water Leak / Flooding',
+    'Weather Related Incident',
+  ],
+  'OTHER': [
+    'Sign On',
+    'Sign Off',
+    'CCTV',
+    'Centre Management Duties',
+    'Contractor',
+    'Delivery',
+    'Fire Isolations',
+    'Lock-up',
+    'Other',
+    'Patrol',
+    'Permit',
+    'SAPOL Attendance / Police Intervention',
+    'Sign In Keys / Fob',
+    'Sign Out Keys / Fob',
+    'Tenants',
+    'Unlock',
+  ],
 };
 
 // Detect if this is a Burnside site by checking if types match Burnside categories
@@ -3736,11 +4198,12 @@ function isBurnsideSite(data) {
 }
 
 // ── Derive categories from a site's actual data ───────────────────────────────
-function getCatsForSite(data, siteName) {
+function getCatsForSite(data, siteName, siteCodeArg) {
   // Get all unique incident types in the data (excluding operational entries)
+  const _codeForExcl = (siteCodeArg || '').toUpperCase();
   const typesInData = [...new Set(
     data
-      .filter(r => !isExcluded(r.type, r.siteCode))
+      .filter(r => !isExcluded(r.type, _codeForExcl || r.siteCode))
       .map(r => r.type.trim())
   )].sort((a,b) => a.localeCompare(b));
 
@@ -3748,7 +4211,21 @@ function getCatsForSite(data, siteName) {
   // Import Site Config) take priority over the shared default list — this
   // is what makes Manager's breakdown genuinely match what the entry tool
   // shows guards, instead of a separate, parallel guess at categorisation.
-  const siteCode = (data.length ? (data[0].siteCode || '') : '').toUpperCase();
+  // Site code: the caller's (the site's own code) is authoritative. Only
+  // fall back to the records — and then to their most common code, not
+  // just the first record's, since a single stray record (e.g. one added
+  // by Manager with a name-derived code) used to send the whole site to
+  // the generic default categories ("General Security" etc.).
+  let siteCode = (siteCodeArg || '').toUpperCase();
+  if (!siteCode && siteName) {
+    const s = (typeof sites !== 'undefined' ? sites : []).find(x => (x.name||'') === siteName);
+    if (s && s.code) siteCode = s.code.toUpperCase();
+  }
+  if (!siteCode && data.length) {
+    const tally = {};
+    data.forEach(r => { const c = (r.siteCode||'').toUpperCase(); if (c) tally[c] = (tally[c]||0) + 1; });
+    siteCode = Object.keys(tally).sort((a,b) => tally[b]-tally[a])[0] || '';
+  }
   let importedCats = null;
   if (siteCode) {
     try {
@@ -3760,7 +4237,10 @@ function getCatsForSite(data, siteName) {
     } catch(e) { /* fall through to defaults below */ }
   }
 
-  if (!typesInData.length) return { sections: importedCats || DEFAULT_CATS, allTypes: [], burnside: false };
+  if (!typesInData.length) {
+    const secs = importedCats || DEFAULT_CATS;
+    return { sections: secs, allTypes: [], burnside: false, sectionOrder: Object.keys(secs) };
+  }
 
   // ── Detect Burnside — check site name first, then data ───────────────────
   const nameToCheck = siteName || (data.length ? (data[0].site || '') : '');
@@ -3783,13 +4263,21 @@ function getCatsForSite(data, siteName) {
   const MEDIUM_KEYWORDS = ['shoplifting','stolen','damage','vandal','suspect','disruptive','drug influence','sharp'];
   const LOW_KEYWORDS    = ['alarm','power','tenant','unsecured','lost child','lift','liability','weather','carpark','medical'];
 
+  // Uses the shared normCatText() (defined above, near isExcluded) so that
+  // harmless punctuation differences (en dash "–" vs hyphen "-", double
+  // spaces, stray whitespace) between a site's imported config and the
+  // actual logged data never cause an otherwise-identical category to be
+  // missed by the exact-match pass below and get dumped into the fallback
+  // bucket instead.
+  const normCat = normCatText;
+
   const sections = {};
   const assigned = new Set();
 
-  // Pass 1: exact case-insensitive match against BASE_CATS
+  // Pass 1: exact match (case- and punctuation-normalised) against BASE_CATS
   Object.entries(BASE_CATS).forEach(([section, knownTypes]) => {
     const matched = typesInData.filter(t =>
-      knownTypes.some(k => k.toLowerCase() === t.toLowerCase())
+      knownTypes.some(k => normCat(k) === normCat(t))
     );
     if (matched.length) {
       sections[section] = matched.sort((a,b) => a.localeCompare(b));
@@ -3810,9 +4298,17 @@ function getCatsForSite(data, siteName) {
       // doesn't use, since the rendering code looks sections up by exact
       // name/position and a stray extra section silently breaks it.
       const findSection = (needle) => SECTION_ORDER.find(s => s.toUpperCase().includes(needle));
-      if (EMERGENCY_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('EMERGENCY');
-      if (!targetSection && GUARD_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('GUARD');
-      if (!targetSection) targetSection = findSection('SECURITY') || SECTION_ORDER[0];
+      if (HIGH_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('HIGH') || findSection('SECURITY');
+      if (!targetSection && EMERGENCY_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('EMERGENCY') || findSection('MEDIUM');
+      if (!targetSection && GUARD_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('GUARD') || findSection('LOW');
+      if (!targetSection && MEDIUM_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('MEDIUM');
+      if (!targetSection && LOW_KEYWORDS.some(k => tl.includes(k))) targetSection = findSection('LOW');
+      // Last resort: the site's own "middle" section if it has one (matches
+      // this site's historical default for unclassified items best), else
+      // its first declared section. Deliberately never SECTION_ORDER[0]
+      // outright — that silently mislabels genuinely-unknown items as the
+      // site's highest-severity category.
+      if (!targetSection) targetSection = findSection('SECURITY') || findSection('MEDIUM') || SECTION_ORDER[Math.min(1, SECTION_ORDER.length - 1)] || SECTION_ORDER[0];
     } else if (burnside) {
       if (HIGH_KEYWORDS.some(k => tl.includes(k)))        targetSection = 'HIGH PRIORITY';
       else if (MEDIUM_KEYWORDS.some(k => tl.includes(k))) targetSection = 'MEDIUM PRIORITY';
@@ -3852,7 +4348,35 @@ function getCatsForSite(data, siteName) {
     return true;
   });
 
-  return { sections: ordered, allTypes, burnside };
+  // sectionOrder is the site's FULL declared tier order (e.g. ['HIGH
+  // PRIORITY','MEDIUM PRIORITY','LOW PRIORITY','OTHER']) regardless of
+  // whether a given tier currently has any matching records. Consumers that
+  // need to address "the 1st/2nd/3rd severity tier" specifically (report
+  // titles, KPI cards) must use THIS — not Object.keys(ordered) — because
+  // `ordered` silently drops empty tiers, which would otherwise shift a
+  // lower tier into a higher tier's slot and mislabel it.
+  return { sections: ordered, allTypes, burnside, sectionOrder: SECTION_ORDER };
+}
+
+// Canonical display titles for a category tier, keyed by the tier's exact
+// declared name (case-insensitive). Falls back to a generic Title Case
+// rendering for any custom section name not listed here, so a future site
+// with its own bespoke category structure still gets a sensible label
+// instead of silently inheriting another site's wording.
+const SECTION_TITLE_MAP = {
+  'HIGH PRIORITY':      { full: 'High Priority Incidents',           comp: 'High Priority' },
+  'MEDIUM PRIORITY':    { full: 'Medium Priority Incidents',         comp: 'Medium Priority' },
+  'LOW PRIORITY':       { full: 'Low Priority Incidents',            comp: 'Low Priority' },
+  'GENERAL SECURITY':   { full: 'Security Related Centre Incidents', comp: 'Security Related' },
+  'EMERGENCY RELATED':  { full: 'Emergency Related Incidents',       comp: 'Emergency Related' },
+  'GUARD INTERVENTION': { full: 'Guard Intervention',                comp: 'Guard Intervention' },
+};
+function sectionTitleInfo(name) {
+  const key = (name || '').trim().toUpperCase();
+  if (SECTION_TITLE_MAP[key]) return SECTION_TITLE_MAP[key];
+  if (!key) return { full: '', comp: '' };
+  const titled = key.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  return { full: titled + ' Incidents', comp: titled };
 }
 
 // Returns a site's COMPLETE category list (its own imported categories if
@@ -3864,6 +4388,14 @@ function getCatsForSite(data, siteName) {
 // summarising what happened, but wrong for a form like Historical Data
 // Entry whose entire purpose is entering counts for categories that may
 // have zero real records so far.
+// Category list for type pickers (edit / add incident): the site's own
+// config categories when it has one, otherwise derived from its data.
+function _typePickerCats(site) {
+  const full = getFullCatsForSite(site);
+  if (full.fromConfig) return { sections: full.sections };
+  return getCatsForSite(site.data||[], site.name||'', site.code||'');
+}
+
 function getFullCatsForSite(site) {
   const siteCode = (site?.code || '').toUpperCase();
   let importedCats = null;
@@ -3876,9 +4408,23 @@ function getFullCatsForSite(site) {
       }
     } catch(e) { /* fall through to defaults below */ }
   }
-  if (importedCats) return { sections: importedCats, burnside: false };
+  if (importedCats) return { sections: importedCats, burnside: false, fromConfig: true };
   const burnside = !importedCats && ((site?.name||'').toLowerCase().includes('burnside') || isBurnsideSite(site?.data||[]));
-  return { sections: burnside ? BURNSIDE_CATS : DEFAULT_CATS, burnside };
+  // Fallback lists (no config imported on this machine) — collapse the
+  // wording variants the shared default list carries ("Lost & Found
+  // property" / "Lost/Found Property" etc.) so each category shows once.
+  const base = burnside ? BURNSIDE_CATS : DEFAULT_CATS;
+  const seen = new Set();
+  const sections = {};
+  Object.entries(base).forEach(([sec, arr]) => {
+    sections[sec] = (arr || []).filter(c => {
+      const k = _catCompact(c);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  });
+  return { sections, burnside, fromConfig: false };
 }
 
 // ─ site-level fs handles are stored in IndexedDB keyed by site id
@@ -4066,6 +4612,9 @@ function showTab(name, el) {
     loadApplicationsTab();
   }
   if(name==='accesssetup') { renderAccessSetupForm(); }
+  if(name==='siteinfo') { /* site info panel */ }
+  if(name==='otherdocs') { /* other docs panel */ }
+  if(name==='induction') { updateInductionFileStatus(); }
 }
 
 function goBack() {
@@ -4136,7 +4685,7 @@ function getActiveSite() { return sites.find(s=>s.id===activeSiteId); }
 function getActiveData()  {
   const s = getActiveSite();
   
-  return s ? (s.data||[]).filter(r=>!isExcluded(r.type, r.siteCode)) : [];
+  return s ? getReportData(s) : [];
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4160,7 +4709,7 @@ function renderOverview() {
   }
   noSites.style.display = 'none';
 
-  const allIncidents = dashSites.flatMap(s=>(s.data||[]).filter(r=>!isExcluded(r.type, r.siteCode)));
+  const allIncidents = dashSites.flatMap(s=>getReportData(s));
   const allMonths    = getSortedMonths(allIncidents);
   const lastMonth    = allMonths[allMonths.length-1]||'';
   const countWithSecondary = arr => arr.filter(r => !REGISTER_LINKED_TYPES_LC.has((r.type||'').toLowerCase())).reduce((s, r) => s + 1 + (r.secondary && r.secondary !== r.type ? 1 : 0), 0);
@@ -4230,22 +4779,22 @@ function renderOverview() {
         <div class="dk-ov-val" style="color:${allInjury>0?'#FBBF24':'#64889a'};">${allInjury}${injuryUnread?' 🔴':''}</div>
         <div class="dk-ov-lbl" style="color:${allInjury>0?'#FBBF24':'#64889a'};">Workplace Injury</div>
       </div>
-      <div class="dk-ov-stat" style="background:${allIsolationsOpen>0?'rgba(245,158,11,0.1)':'rgba(100,136,154,0.08)'};border:1px solid ${allIsolationsOpen>0?'rgba(245,158,11,0.4)':'rgba(100,136,154,0.3)'};border-radius:8px;padding:8px 20px;cursor:pointer;" onclick="showTab('isolation')" title="Click to view the isolation register">
+      <div class="dk-ov-stat" style="background:${allIsolationsOpen>0?'rgba(245,158,11,0.1)':'rgba(100,136,154,0.08)'};border:1px solid ${allIsolationsOpen>0?'rgba(245,158,11,0.4)':'rgba(100,136,154,0.3)'};border-radius:8px;padding:8px 20px;cursor:pointer;" onclick="openAllIsolationsModal()" title="Click to view the isolation register across all sites">
         <div class="dk-ov-val" style="color:${allIsolationsOpen>0?'#f59e0b':'#64889a'};">${allIsolationsOpen>0?'🔒 ':''}${allIsolationsOpen}</div>
         <div class="dk-ov-lbl" style="color:${allIsolationsOpen>0?'#f59e0b':'#64889a'};">Isolated</div>
       </div>
-      <div class="dk-ov-stat" style="background:${allPermitsOpen>0?'rgba(55,138,221,0.1)':'rgba(100,136,154,0.08)'};border:1px solid ${allPermitsOpen>0?'rgba(55,138,221,0.4)':'rgba(100,136,154,0.3)'};border-radius:8px;padding:8px 20px;cursor:pointer;" onclick="showTab('permit')" title="Click to view the permit register">
+      <div class="dk-ov-stat" style="background:${allPermitsOpen>0?'rgba(55,138,221,0.1)':'rgba(100,136,154,0.08)'};border:1px solid ${allPermitsOpen>0?'rgba(55,138,221,0.4)':'rgba(100,136,154,0.3)'};border-radius:8px;padding:8px 20px;cursor:pointer;" onclick="openAllPermitsModal()" title="Click to view the permit register across all sites">
         <div class="dk-ov-val" style="color:${allPermitsOpen>0?'#378add':'#64889a'};">${allPermitsOpen>0?'📝 ':''}${allPermitsOpen}</div>
         <div class="dk-ov-lbl" style="color:${allPermitsOpen>0?'#378add':'#64889a'};">Active Permits</div>
       </div>
-      <div class="dk-ov-stat" style="background:${allKeysOut>0?'rgba(139,92,246,0.1)':'rgba(100,136,154,0.08)'};border:1px solid ${allKeysOut>0?'rgba(139,92,246,0.4)':'rgba(100,136,154,0.3)'};border-radius:8px;padding:8px 20px;cursor:pointer;" onclick="showTab('keys')" title="Click to view the key register">
+      <div class="dk-ov-stat" style="background:${allKeysOut>0?'rgba(139,92,246,0.1)':'rgba(100,136,154,0.08)'};border:1px solid ${allKeysOut>0?'rgba(139,92,246,0.4)':'rgba(100,136,154,0.3)'};border-radius:8px;padding:8px 20px;cursor:pointer;" onclick="openAllKeysModal()" title="Click to view the key register across all sites">
         <div class="dk-ov-val" style="color:${allKeysOut>0?'#8b5cf6':'#64889a'};">${allKeysOut>0?'🔑 ':''}${allKeysOut}</div>
         <div class="dk-ov-lbl" style="color:${allKeysOut>0?'#8b5cf6':'#64889a'};">Keys Out</div>
       </div>`;
   }
 
   [...dashSites].sort((a,b)=>a.name.localeCompare(b.name)).forEach(s => {
-    const incidents  = (s.data||[]).filter(r=>!isExcluded(r.type, r.siteCode));
+    const incidents  = getReportData(s);
     const months     = getSortedMonths(incidents);
 
     // Use ACTUAL current month, not just last month in data
@@ -4334,33 +4883,71 @@ function initMonthly() {
   else { document.getElementById('monthly-pills').innerHTML=''; document.getElementById('monthly-kpi').innerHTML='<p style="color:var(--text3);padding:20px;">No incident data for this site yet.</p>'; }
 }
 
+// Lists the exact records counted under one category for one month, with
+// the wording the guard originally used, so a count that looks wrong can be
+// checked record by record.
+function showMonthlyCatRecords(cat, monthStr) {
+  const data = getActiveData();
+  const recs = data.filter(r => r.month === monthStr && (r.type === cat || (r.secondary && r.secondary !== r.type && r.secondary === cat)))
+    .sort((a,b) => ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+  let box = document.getElementById('monthly-drill');
+  const tbl = document.getElementById('monthly-tbl');
+  if (!box && tbl) {
+    box = document.createElement('div');
+    box.id = 'monthly-drill';
+    box.style.cssText = 'margin-top:16px;border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:12px 14px;font-size:12px;';
+    tbl.parentNode.insertBefore(box, tbl.nextSibling);
+  }
+  if (!box) return;
+  const esc = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const rows = recs.map((r,i) => {
+    const via = r.type === cat ? 'Primary' : 'Secondary';
+    const orig = via === 'Primary' ? (r._origType || r.type) : (r._origSecondary || r.secondary);
+    const renamed = orig && orig !== cat ? ` <span style="color:#ef9f27;">(logged as "${esc(orig)}")</span>` : '';
+    return `<tr><td>${i+1}</td><td>${esc(r.date)} ${esc(r.time||'')}</td><td>${via}${renamed}</td><td>${esc(r.__historical__ ? 'Historical entry' : (r.officer||''))}</td><td>${esc((r.details||'').slice(0,120))}</td></tr>`;
+  }).join('');
+  box.innerHTML = `<div style="display:flex;align-items:center;margin-bottom:8px;">
+      <strong style="font-size:13px;">${esc(cat)} — ${esc(monthStr)}: ${recs.length} counted</strong>
+      <a href="javascript:void(0)" onclick="document.getElementById('monthly-drill').remove()" style="margin-left:auto;color:var(--text3);">✕ close</a></div>
+    <table class="rtbl dk-rtbl" style="font-size:12px;width:100%;"><thead><tr><th>#</th><th>Date</th><th>Counted as</th><th>Officer</th><th>Details</th></tr></thead><tbody>${rows}</tbody></table>`;
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function renderMonthly(idx) {
+  const _oldDrill = document.getElementById('monthly-drill'); if (_oldDrill) _oldDrill.remove();
   const data     = getActiveData();
   const months   = getSortedMonths(data);
   if(!months.length) return;
   const monthStr = months[idx];
   const priorStr = priorYearMonth(monthStr);
   const site     = getActiveSite();
-  const { sections: catSections, burnside, allTypes: allCats } = getCatsForSite(data, site?.name||"");
+  const { sections: catSections, allTypes: allCats, sectionOrder } = getCatsForSite(data, site?.name||"", site?.code||"");
 
-  // Dynamic section keys and labels
-  const sectionKeys = Object.keys(catSections).filter(s => s !== 'OTHER');
-  const secKey   = sectionKeys[0] || '';
-  const medKey   = sectionKeys[1] || '';
-  const lowKey   = sectionKeys[2] || '';
+  // Dynamic section keys and labels — addressed by the site's FULL declared
+  // tier order (sectionOrder), not by position within catSections, which
+  // silently drops any tier with zero matching records this period and
+  // would otherwise shift a lower tier into a higher tier's label/slot.
+  const tierOrder = sectionOrder.filter(s => s !== 'OTHER');
+  const secKey   = tierOrder[0] || '';
+  const medKey   = tierOrder[1] || '';
+  const lowKey   = tierOrder[2] || '';
   const stdCats   = catSections[secKey]  || [];
   const emgCats   = catSections[medKey]  || [];
   const guardCats = catSections[lowKey]  || [];
 
-  const secLabel  = burnside ? 'High Priority'   : 'General Security';
-  const medLabel  = burnside ? 'Medium Priority'  : 'Emergency Related';
-  const lowLabel  = burnside ? 'Low Priority'     : 'Guard Intervention';
+  const secLabel  = sectionTitleInfo(secKey).comp;
+  const medLabel  = sectionTitleInfo(medKey).comp;
+  const lowLabel  = sectionTitleInfo(lowKey).comp;
 
   const currData = data.filter(r=>r.month===monthStr);
   const priorData= data.filter(r=>r.month===priorStr);
   const countWS = arr => arr.filter(r => !REGISTER_LINKED_TYPES_LC.has((r.type||'').toLowerCase()))
     .reduce((s,r) => s + 1 + (r.secondary && r.secondary !== r.type ? 1 : 0), 0);
-  const cT=countWS(currData), pT=countWS(priorData), diff=cT-pT;
+  // Grand total = exactly the sum of the categories listed in the table
+  // (primary + secondary), so the subtotals always add up to it.
+  const _allShownCats = Object.values(catSections).flat();
+  const _cntShown = arr => arr.reduce((s,r) => s + (_allShownCats.includes(r.type)?1:0) + (r.secondary && r.secondary!==r.type && _allShownCats.includes(r.secondary)?1:0), 0);
+  const cT=_cntShown(currData), pT=_cntShown(priorData), diff=cT-pT;
 
   document.getElementById('monthly-title').textContent   = `Monthly Report — ${site?.name||''} · ${monthStr}`;
   document.getElementById('monthly-bar-title').textContent=`Category Breakdown — ${monthStr} vs ${priorStr}`;
@@ -4397,26 +4984,27 @@ function renderMonthly(idx) {
   }).join('');
 
   // Bar chart
-  const activeCats=allCats.filter(c=>currData.some(r=>r.type===c)||priorData.some(r=>r.type===c)).slice(0,14);
+  const _cc=(arr,c)=>arr.filter(r=>r.type===c||(r.secondary&&r.secondary!==r.type&&r.secondary===c)).length;
+  const activeCats=allCats.filter(c=>_cc(currData,c)||_cc(priorData,c)).slice(0,14);
   const ctx1=document.getElementById('mBarChart').getContext('2d');
   if(mBarInst)mBarInst.destroy();
   mBarInst=new Chart(ctx1,{type:'bar',data:{
     labels:activeCats.map(c=>c.length>22?c.slice(0,20)+'…':c),
     datasets:[
-      {label:monthStr,data:activeCats.map(c=>currData.filter(r=>r.type===c).length),backgroundColor:'#3b82f6',borderRadius:4,borderSkipped:false},
-      {label:priorStr,data:activeCats.map(c=>priorData.filter(r=>r.type===c).length),backgroundColor:'#e2e8f0',borderRadius:4,borderSkipped:false}
+      {label:monthStr,data:activeCats.map(c=>_cc(currData,c)),backgroundColor:'#3b82f6',borderRadius:4,borderSkipped:false},
+      {label:priorStr,data:activeCats.map(c=>_cc(priorData,c)),backgroundColor:'#e2e8f0',borderRadius:4,borderSkipped:false}
     ]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
     plugins:{legend:{position:'top',labels:{font:{family:'Inter',size:12},color:'#94a8be',boxWidth:12}}},
     scales:{x:{grid:{color:'rgba(255,255,255,0.06)'},ticks:{font:{family:'Inter',size:11},color:'#5a7191'},border:{display:false}},
             y:{grid:{color:'rgba(255,255,255,0.06)'},ticks:{font:{family:'Inter',size:11},color:'#94a8be'},border:{display:false}}}}});
 
   // Pie chart
-  const pieC=allCats.filter(c=>currData.filter(r=>r.type===c).length>0);
+  const pieC=allCats.filter(c=>_cc(currData,c)>0);
   const ctx2=document.getElementById('mPieChart').getContext('2d');
   if(mPieInst)mPieInst.destroy();
   mPieInst=new Chart(ctx2,{type:'doughnut',data:{
     labels:pieC.map(c=>c.length>26?c.slice(0,24)+'…':c),
-    datasets:[{data:pieC.map(c=>currData.filter(r=>r.type===c).length),backgroundColor:CHART_COLORS,borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+    datasets:[{data:pieC.map(c=>_cc(currData,c)),backgroundColor:CHART_COLORS,borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},color:'#94a8be',boxWidth:12,padding:8}}},cutout:'55%'}});
 
   // Detail table
@@ -4428,7 +5016,9 @@ function renderMonthly(idx) {
       const c=cntByCat(currData,cat),p=cntByCat(priorData,cat),d=c-p;
       const pct=p>0?Math.round(Math.abs(d)/p*100):(c>0?100:0);
       const badge=d===0?'<span class="badge-z">—</span>':d>0?`<span class="badge-up">▲ ${pct}%</span>`:`<span class="badge-dn">▼ ${pct}%</span>`;
-      thtml+=`<tr><td>${cat}</td><td class="num ${c===0?'zero':'hi'}">${c}</td><td class="num ${p===0?'zero':''}">${p}</td><td class="num ${d>0?'diff-up':d<0?'diff-dn':'diff-z'}">${d>0?'+':''}${d}</td><td>${badge}</td></tr>`;
+      const _q = s => String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const _link = (n, m) => n ? `<a href="javascript:void(0)" style="color:inherit;text-decoration:underline dotted;cursor:pointer;" title="Show the ${n} record${n!==1?'s':''} counted" onclick="showMonthlyCatRecords('${_q(cat)}','${_q(m)}');event.stopPropagation();">${n}</a>` : n;
+      thtml+=`<tr><td>${cat}</td><td class="num ${c===0?'zero':'hi'}">${_link(c,monthStr)}</td><td class="num ${p===0?'zero':''}">${_link(p,priorStr)}</td><td class="num ${d>0?'diff-up':d<0?'diff-dn':'diff-z'}">${d>0?'+':''}${d}</td><td>${badge}</td></tr>`;
     });
     const sC=cats.reduce((s,c)=>s+cntByCat(currData,c),0);
     const sP=cats.reduce((s,c)=>s+cntByCat(priorData,c),0);
@@ -4457,7 +5047,7 @@ function selectMonthly(i) {
 function renderYTD() {
   const data = getActiveData();
   const site = getActiveSite();
-  const { sections: catSections } = getCatsForSite(data, site?.name||'');
+  const { sections: catSections } = getCatsForSite(data, site?.name||'', site?.code||'');
 
   if (!data.length) {
     document.getElementById('ytd-tbl').innerHTML = '<tbody><tr><td style="padding:30px;color:var(--text3);">No data yet for this site.</td></tr></tbody>';
@@ -4740,35 +5330,42 @@ function generateReport() {
   if(!monthStr){showToast('Select a month','error');return;}
   const site = sites.find(s=>s.id===sid);
   if(!site){showToast('Site not found','error');return;}
-  const allData = (site.data||[]).filter(r=>!isExcluded(r.type, r.siteCode));
+  const allData = getReportData(site);
   buildPDFReport(site, allData, monthStr, guards);
 }
 
 function buildPDFReport(site, allData, monthStr, guardsStr, opts = {}) {
-  const { sections: catSections, allTypes: allCatsPDF, burnside } = getCatsForSite(allData, site?.name||"");
+  const { sections: catSections, allTypes: allCatsPDF, sectionOrder } = getCatsForSite(allData, site?.name||"", site?.code||"");
 
-  // Get section keys in order (exclude OTHER)
-  const sectionKeys = Object.keys(catSections).filter(s => s !== 'OTHER');
+  // Tier keys addressed by the site's FULL declared order (sectionOrder),
+  // not by position within catSections — catSections silently drops any
+  // tier with zero matching records this period, which would otherwise
+  // shift a lower tier into a higher tier's title/slot (this was the cause
+  // of Burnside's Medium/Low Priority items appearing scrambled under the
+  // wrong, generic report headings).
+  const tierOrder = sectionOrder.filter(s => s !== 'OTHER');
 
-  // Primary section = first (Security Related / High Priority)
-  // Secondary section = second (Emergency Related / Medium Priority)
-  // Tertiary section = third (Guard Intervention / Low Priority)
-  const secKey   = sectionKeys[0] || 'GENERAL SECURITY';
-  const medKey   = sectionKeys[1] || '';
-  const lowKey   = sectionKeys[2] || '';
-  const otherKey = sectionKeys[3] || '';
+  // Primary section = first declared tier (Security Related / High Priority)
+  // Secondary section = second declared tier (Emergency Related / Medium Priority)
+  // Tertiary section = third declared tier (Guard Intervention / Low Priority)
+  const secKey   = tierOrder[0] || 'GENERAL SECURITY';
+  const medKey   = tierOrder[1] || '';
+  const lowKey   = tierOrder[2] || '';
+  const otherKey = sectionOrder.find(s => s === 'OTHER') || '';
 
   const stdCats   = catSections[secKey]   || [];
   const emgCats   = catSections[medKey]   || [];
   const guardCats = catSections[lowKey]   || [];
   const otherCats = catSections[otherKey] || [];
 
-  // Human-readable titles for the report
-  const secTitle   = burnside ? 'High Priority Incidents'    : 'Security Related Centre Incidents';
-  const medTitle   = burnside ? 'Medium Priority Incidents'  : 'Emergency Related Incidents';
-  const lowTitle   = burnside ? 'Low Priority Incidents'     : 'Guard Intervention';
-  const compTitle1 = burnside ? 'High Priority'              : 'Security Related';
-  const compTitle2 = burnside ? 'Medium / Low Priority'      : 'Emergency Related';
+  // Human-readable titles for the report — derived from the tier's actual
+  // declared name, so any config's own section names are honoured rather
+  // than assuming every site is either "Burnside-style" or "legacy-style".
+  const secTitle   = sectionTitleInfo(secKey).full;
+  const medTitle   = sectionTitleInfo(medKey).full;
+  const lowTitle   = sectionTitleInfo(lowKey).full;
+  const compTitle1 = sectionTitleInfo(secKey).comp;
+  const compTitle2 = sectionTitleInfo(medKey).comp;
   const priorStr = priorYearMonth(monthStr);
   const cntByCatPDF = (arr,cat) => arr.filter(r=>r.type===cat||(r.secondary&&r.secondary!==r.type&&r.secondary===cat)).length;
   const cntCatsPDF  = (arr,cats) => arr.reduce((s,r) => s + (cats.includes(r.type)?1:0) + (r.secondary && r.secondary!==r.type && cats.includes(r.secondary)?1:0), 0);
@@ -4839,8 +5436,9 @@ function buildPDFReport(site, allData, monthStr, guardsStr, opts = {}) {
 
   const cntPDF  = (month, cat) => allData.filter(r => r.month === month &&
     (r.type === cat || (r.secondary && r.secondary !== r.type && r.secondary === cat))).length;
-  const cntAllPDF = month => allData.filter(r => r.month === month && !REGISTER_LINKED_TYPES_LC.has((r.type||'').toLowerCase()))
-    .reduce((s,r) => s + 1 + (r.secondary && r.secondary !== r.type ? 1 : 0), 0);
+  const _allShownPDF = Object.values(catSections).flat();
+  const cntAllPDF = month => allData.filter(r => r.month === month)
+    .reduce((s,r) => s + (_allShownPDF.includes(r.type)?1:0) + (r.secondary && r.secondary !== r.type && _allShownPDF.includes(r.secondary) ? 1 : 0), 0);
   const sum12PDF  = (months, cat) => months.reduce((s,m) => s + cntPDF(m,cat), 0);
 
   // Short month labels split into abbrev + year for two-row header
@@ -5197,8 +5795,8 @@ body{font-family:'Inter',-apple-system,sans-serif;background:#e8eef5;color:#1a1a
   <!-- KPI summary -->
   <div class="kpi-row">
     <div class="kpi-box"><div class="kpi-num">${cT}</div><div class="kpi-lbl">Total Incidents<br>${monthStr}</div></div>
-    <div class="kpi-box alt"><div class="kpi-num">${hTotal}</div><div class="kpi-lbl">${burnside?'High Priority':'Security Related'}<br>Incidents</div></div>
-    <div class="kpi-box alt"><div class="kpi-num">${mTotal}</div><div class="kpi-lbl">${burnside?'Medium Priority':'Emergency Related'}<br>Incidents</div></div>
+    <div class="kpi-box alt"><div class="kpi-num">${hTotal}</div><div class="kpi-lbl">${compTitle1}<br>Incidents</div></div>
+    <div class="kpi-box alt"><div class="kpi-num">${mTotal}</div><div class="kpi-lbl">${compTitle2}<br>Incidents</div></div>
     <div class="kpi-box ${diff===0?'':diff>0?'alt':'alt2'}"><div class="kpi-num">${diff>0?'+':''}${diff}</div><div class="kpi-lbl">vs ${priorStr}<br>(${pT} incidents)</div></div>
   </div>
 </div>
@@ -5505,6 +6103,92 @@ ${!opts.skipTimeCharts ? `<!-- ══ PAGE 6: HEAT MAP ══ -->
 // ═══════════════════════════════════════════════════════
 // SITES SETTINGS
 // ═══════════════════════════════════════════════════════
+// Shows which categories this browser has stored for a site (the
+// ams_entry_cats_<CODE> key that every report reads), with buttons to clear
+// them or re-import the site's config JSON.
+function _siteCatsStatusHTML(s) {
+  const code = (s.code || '').toUpperCase();
+  let stored = null;
+  try { const raw = localStorage.getItem('ams_entry_cats_' + code); if (raw) stored = JSON.parse(raw); } catch(e) {}
+  const btns = `
+    <button class="btn btn-outline btn-sm" onclick="reimportSiteCategories('${s.id}')" style="margin-left:8px;">&#11014; Re-import Config</button>
+    ${stored ? `<button class="btn btn-outline btn-sm" onclick="clearSiteCategories('${s.id}')" style="margin-left:6px;color:var(--danger);border-color:rgba(220,38,38,0.3);">Clear Stored Categories</button>` : ''}`;
+  if (!stored || !Object.keys(stored).length) {
+    return `<div style="font-size:12px;color:#b45309;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:8px 12px;margin-bottom:12px;">
+      <strong>Categories:</strong> none stored in this browser — reports use the generic default list.${btns}</div>`;
+  }
+  const esc = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const secs = Object.entries(stored).map(([sec, arr]) => `${esc(sec)} (${Array.isArray(arr)?arr.length:0})`).join(' · ');
+  const total = Object.values(stored).reduce((n, arr) => n + (Array.isArray(arr)?arr.length:0), 0);
+  const detail = Object.entries(stored).map(([sec, arr]) => `
+      <div style="margin-top:10px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:4px;">
+          ${esc(sec)} <span style="font-weight:400;">(${Array.isArray(arr)?arr.length:0})${sec.trim().toUpperCase()==='OTHER'?' — not counted in reports':''}</span>
+        </div>
+        <ol style="margin:0;padding-left:22px;column-width:230px;column-gap:24px;">
+          ${(Array.isArray(arr)?arr:[]).map(c => `<li style="padding:1px 0;break-inside:avoid;">${esc(c)}</li>`).join('')}
+        </ol>
+      </div>`).join('');
+  return `<div style="font-size:12px;color:var(--text2);background:var(--bg2, rgba(0,0,0,0.03));border:1px solid var(--border, rgba(0,0,0,0.08));border-radius:8px;padding:8px 12px;margin-bottom:12px;">
+    <strong>Stored categories:</strong> ${secs}${btns}
+    <details style="margin-top:6px;">
+      <summary style="cursor:pointer;color:var(--accent);font-weight:600;">View all ${total} categories</summary>
+      ${detail}
+    </details></div>`;
+}
+
+function _forgetSiteCatCaches(code) {
+  delete _siteOtherTypesCache[code];
+  delete _siteRealCatsCache[code];
+  delete _siteCatMatchCache[code];
+  window._ytdData = null;
+}
+
+function clearSiteCategories(siteId) {
+  const site = sites.find(x => x.id === siteId);
+  if (!site) return;
+  const code = (site.code || '').toUpperCase();
+  if (!confirm(`Clear the categories stored in this browser for ${site.name} (${code})?\n\nReports will use the generic default list until you re-import this site's config JSON.`)) return;
+  try { localStorage.removeItem('ams_entry_cats_' + code); } catch(e) {}
+  _forgetSiteCatCaches(code);
+  renderSitesSettings();
+  try { renderOverview(); } catch(e) {}
+  showToast(`Stored categories cleared for ${site.name}. Re-import its config to load the correct list.`, 'success');
+}
+
+function reimportSiteCategories(siteId) {
+  const site = sites.find(x => x.id === siteId);
+  if (!site) return;
+  let inp = document.getElementById('site-cats-reimport-file');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.json'; inp.id = 'site-cats-reimport-file'; inp.style.display = 'none';
+    document.body.appendChild(inp);
+  }
+  inp.onchange = () => {
+    const f = inp.files[0]; inp.value = '';
+    if (!f) return;
+    // Replace (not merge) the stored list — clear first so nothing old survives.
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      let cfg; try { cfg = parseJsonLenient(e.target.result); } catch { showToast('That file is not valid JSON', 'error'); return; }
+      const code = normaliseSiteCode(cfg.code || '');
+      if (code !== normaliseSiteCode(site.code)) { showToast(`That config is for site code "${code}", not "${normaliseSiteCode(site.code)}"`, 'error'); return; }
+      if (!cfg.categories || !Object.keys(cfg.categories).length) { showToast('That config file has no categories in it', 'error'); return; }
+      try {
+        localStorage.removeItem('ams_entry_cats_' + code);
+        localStorage.setItem('ams_entry_cats_' + code, JSON.stringify(cfg.categories));
+      } catch(err) { showToast('Categories could not save — device storage may be full', 'error'); return; }
+      _forgetSiteCatCaches(code);
+      renderSitesSettings();
+      try { renderOverview(); } catch(err) {}
+      showToast(`${site.name} categories replaced from config (${Object.keys(cfg.categories).join(', ')}).`, 'success');
+    };
+    reader.readAsText(f);
+  };
+  inp.click();
+}
+
 function renderSitesSettings() {
   const usageEl = document.getElementById('storage-usage-note');
   if (usageEl) {
@@ -5544,6 +6228,8 @@ function renderSitesSettings() {
         <button class="btn btn-outline btn-sm" onclick="editSiteCode('${s.id}')" style="color:#ef9f27;border-color:rgba(239,159,39,0.3);">&#128290; Edit Code</button>
         <button class="btn btn-outline btn-sm" onclick="removeSite('${s.id}')" style="color:var(--danger);border-color:rgba(220,38,38,0.3);">Remove Site</button>
       </div>
+
+      ${_siteCatsStatusHTML(s)}
 
       <!-- GOOGLE DRIVE LOCAL FILE -->
       <div style="background:var(--accent-light);border:1px solid rgba(29,78,216,0.15);border-radius:8px;padding:14px 16px;">
@@ -5649,6 +6335,25 @@ function addKnownSiteCode(code) {
 // Strips ALL whitespace (not just leading/trailing) and uppercases, so
 // "Hallett Cove", "HALLET TCOVE", " hallettcove " all normalise identically —
 // since the cloud sync filename is built from this exact string.
+// Parses an imported JSON file, forgiving the common hand-editing slips:
+// a trailing comma after the last item in a list/object, and a byte-order
+// mark at the start. Anything else still fails, with a toast pointing at
+// the line so it can be fixed.
+function parseJsonLenient(text) {
+  const src = String(text || '').replace(/^\uFEFF/, '');
+  try { return JSON.parse(src); } catch(first) {
+    const cleaned = src.replace(/,(\s*[\]}])/g, '$1');
+    try { return JSON.parse(cleaned); } catch(second) {
+      const m = /position (\d+)/.exec(first.message || '');
+      if (m) {
+        const line = src.slice(0, +m[1]).split('\n').length;
+        try { showToast(`JSON error near line ${line} — check for a missing comma or quote`, 'error'); } catch(e) {}
+      }
+      throw first;
+    }
+  }
+}
+
 function normaliseSiteCode(raw) {
   return (raw || '').replace(/\s+/g, '').toUpperCase();
 }
@@ -5716,17 +6421,22 @@ function importSiteConfigFile(file, opts = {}) {
   const reader = new FileReader();
   reader.onload = (e) => {
     let cfg;
-    try { cfg = JSON.parse(e.target.result); }
+    try { cfg = parseJsonLenient(e.target.result); }
     catch { showToast('That file is not valid JSON', 'error'); return; }
     if (!cfg.code || !cfg.name) { showToast('Config file must include at least a site name and code', 'error'); return; }
 
     const code = normaliseSiteCode(cfg.code);
+    if (opts.expectCode && code !== normaliseSiteCode(opts.expectCode)) {
+      showToast(`That config is for site code "${code}", not "${normaliseSiteCode(opts.expectCode)}" — pick this site's own config file`, 'error');
+      return;
+    }
 
     const applyCategories = () => {
       if (cfg.categories && Object.keys(cfg.categories).length) {
         try {
           localStorage.setItem('ams_entry_cats_' + code, JSON.stringify(cfg.categories));
           delete _siteOtherTypesCache[code]; // stale cache would otherwise hide the new categories until reload
+          delete _siteRealCatsCache[code]; delete _siteCatMatchCache[code];
         }
         catch(e) { showToast('Categories could not save — device storage may be full', 'error'); }
       }
@@ -5749,6 +6459,7 @@ function importSiteConfigFile(file, opts = {}) {
       if (opts.paperLogOnly) renderPaperLogSitesList();
       showToast(`Updated "${existing.name}" from config file.`, 'success');
       if (existing.scriptUrl && !opts.paperLogOnly) fetchSiteFromScript(existing.id);
+      if (typeof opts.onDone === 'function') opts.onDone();
     } else {
       if (!confirmSiteCode(code)) { showToast('Site not added — check the code and try again', 'error'); return; }
       const s = { id: crypto.randomUUID(), name: cfg.name.trim(), code, scriptUrl: cfg.scriptUrl||'', wufooFormId: cfg.wufooFormId||'', maintenanceWufooFormId: cfg.maintenanceWufooFormId||'', poiUrl: cfg.poiUrl||'', data: [], ppeData: [], lastLoaded: null };
@@ -5763,6 +6474,7 @@ function importSiteConfigFile(file, opts = {}) {
       if (opts.paperLogOnly) renderPaperLogSitesList();
       showToast(`Added "${s.name}" from config file.`, 'success');
       if (s.scriptUrl && !opts.paperLogOnly) fetchSiteFromScript(s.id);
+      if (typeof opts.onDone === 'function') opts.onDone();
     }
   };
   reader.readAsText(file);
@@ -6071,7 +6783,7 @@ function importAccessSetupFile(file) {
   reader.onload = (e) => {
     try {
       let payload;
-      try { payload = JSON.parse(e.target.result); }
+      try { payload = parseJsonLenient(e.target.result); }
       catch (err) { showToast("That file isn't valid JSON.", 'error'); return; }
       const looksRight = payload && (payload.__ams_export__ === 'landingpage-access-config'
         || payload.appsDataUrl || payload.policyHubUrl || payload.wufooViewerUrl || payload.appsAccessCode);
@@ -9445,7 +10157,7 @@ function importManagerSettings(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     let payload;
-    try { payload = JSON.parse(e.target.result); }
+    try { payload = parseJsonLenient(e.target.result); }
     catch (err) { showToast('That file isn\'t valid JSON — export failed to parse.', 'error'); return; }
     if (payload.__ams_export__ !== 'manager-settings' || !Array.isArray(payload.sites)) {
       showToast('That doesn\'t look like an AMS Manager settings export.', 'error'); return;
@@ -9784,7 +10496,7 @@ function switchToEditMode() {
   if (typeSel) {
     typeSel.innerHTML = '';
     if (site) {
-      const { sections } = getCatsForSite(site.data||[], site.name||'');
+      const { sections } = _typePickerCats(site);
       Object.entries(sections).forEach(([sec, types]) => {
         const g = document.createElement('optgroup');
         g.label = sec;
@@ -9806,7 +10518,7 @@ function switchToEditMode() {
   if (secSel) {
     secSel.innerHTML = '<option value="">— None —</option>';
     if (site) {
-      const { sections } = getCatsForSite(site.data||[], site.name||'');
+      const { sections } = _typePickerCats(site);
       Object.entries(sections).forEach(([sec, types]) => {
         const g = document.createElement('optgroup');
         g.label = sec;
@@ -10003,7 +10715,7 @@ function loadAISiteTypes() {
 
   // Build from actual site data so all custom types are available,
   // falling back to DEFAULT_CATS/BURNSIDE_CATS if no data loaded yet
-  const { sections } = getCatsForSite(site.data||[], site.name||'');
+  const { sections } = _typePickerCats(site);
   Object.entries(sections).forEach(([sec, types]) => {
     const g = document.createElement('optgroup');
     g.label = sec;
@@ -10037,7 +10749,7 @@ async function saveAddedIncident() {
     complete: document.getElementById('ai-complete')?.value || '',
     cmo:      document.getElementById('ai-cmo')?.value || '',
     cmoName:'', action:'',
-    site: site.name, siteCode: site.name.toUpperCase().replace(/[^A-Z0-9]/g,''),
+    site: site.name, siteCode: site.code || site.name.toUpperCase().replace(/[^A-Z0-9]/g,''),
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     addedByManager: true
   };
@@ -10460,7 +11172,7 @@ async function runBatchReports() {
     if (stat) stat.textContent = 'Generating: '+site.name+' — '+month+' ('+(done+1)+' of '+selectedSites.length+')';
     if (bar)  bar.style.width = Math.round((done/selectedSites.length)*100)+'%';
     
-    const allData = (site.data||[]).filter(r => !isExcluded(r.type, r.siteCode));
+    const allData = getReportData(site);
     try { buildPDFReport(site, allData, month, ''); } catch(e) { console.error(e); }
     done++;
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -10482,7 +11194,7 @@ function exportYTDExcel() {
   const thisFYReached = thisFYMonths.map(() => true);
   const thisFYLabel = 'This 12M';
   const lastFYLabel = 'Prev 12M';
-  const cnt = (month, cat) => data.filter(r => r.month===month && r.type===cat).length;
+  const cnt = (month, cat) => data.filter(r => r.month===month && (r.type===cat || (r.secondary && r.secondary!==r.type && r.secondary===cat))).length;
   const rows = [['Category'].concat(shortLabels).concat([thisFYLabel, lastFYLabel, '+/−'])];
   Object.entries(catSections).forEach(([section, cats]) => {
     rows.push([section.toUpperCase()].concat(Array(shortLabels.length+3).fill('')));
@@ -10872,6 +11584,7 @@ function initHistorical() {
   document.getElementById('hist-no-site').style.display = siteSel.value ? 'none' : 'block';
   document.getElementById('hist-cats-grid').style.display = 'none';
   document.getElementById('hist-existing-warn').style.display = 'none';
+  const _hcw = document.getElementById('hist-config-warn'); if (_hcw) _hcw.style.display = 'none';
 }
 
 function loadHistoricalCounts() {
@@ -10885,7 +11598,21 @@ function loadHistoricalCounts() {
   const site = sites.find(s => s.id === siteId);
   if (!site) return;
 
-  const { sections: catSections } = getFullCatsForSite(site);
+  const { sections: catSections, fromConfig } = getFullCatsForSite(site);
+
+  // No site config on this machine → the grid falls back to the generic
+  // shared list, which is why it shows far more categories than the site
+  // actually uses. Say so, and offer to import the config right here.
+  const cfgWarn = document.getElementById('hist-config-warn');
+  if (cfgWarn) {
+    if (fromConfig) {
+      cfgWarn.style.display = 'none';
+    } else {
+      cfgWarn.style.display = 'block';
+      cfgWarn.innerHTML = `⚠ No site config has been imported for <strong>${site.name}</strong> (code ${site.code||'—'}) on this computer, so the generic default category list is shown instead of this site's own categories.
+        <button class="btn btn-outline" style="margin-left:10px;padding:4px 10px;font-size:12px;" onclick="document.getElementById('hist-config-file').click()">&#11014; Import this site's config</button>`;
+    }
+  }
 
   // Check for existing records this month
   const existing = (site.data || []).filter(r => r.month === monthStr);
@@ -10895,7 +11622,7 @@ function loadHistoricalCounts() {
 
   if (existingReal.length > 0) {
     warn.style.display = 'block';
-    warn.innerHTML = `⚠ ${existingReal.length} real guard-entered record${existingReal.length!==1?'s':''} already exist for ${monthStr}. Historical records will be added alongside them.`;
+    warn.innerHTML = `⚠ ${monthStr} already has <strong>${existingReal.length} guard-entered record${existingReal.length!==1?'s':''}</strong>${existingHistorical.length?` and <strong>${existingHistorical.length} historical record${existingHistorical.length!==1?'s':''}</strong>`:''}. The boxes below only show the historical ones — anything you save here is <strong>added on top</strong> of the guard-entered records. To replace the whole month, use "Delete ALL Records for this Month" first.`;
   } else if (existingHistorical.length > 0) {
     warn.style.display = 'block';
     warn.innerHTML = `ℹ ${existingHistorical.length} historical record${existingHistorical.length!==1?'s':''} already exist for ${monthStr}. Saving will replace them with your new counts.`;
@@ -10929,7 +11656,11 @@ function loadHistoricalCounts() {
 
     cats.forEach(cat => {
       // Pre-fill with existing historical count if any
-      const existingCount = existingHistorical.filter(r => r.type === cat).length;
+      const existingCount = existingHistorical.filter(r => {
+        if (r.type === cat) return true;
+        const mapped = mapTypeToSiteCat(r.type, siteCodeUC);
+        return mapped && mapped === cat;
+      }).length;
       const div = document.createElement('div');
       div.style.cssText = 'display:flex;align-items:center;gap:10px;background:#162230;border:1px solid #1e3040;border-radius:7px;padding:8px 12px;';
       div.innerHTML = `
@@ -10961,6 +11692,19 @@ function clearHistoricalCounts() {
   updateHistTotal();
 }
 
+// Records removed from site.data must also be listed in the site's
+// deleted-IDs list, otherwise the save merge (cloud or Drive file) sees them
+// still in the saved copy and quietly puts them back.
+function _trackDeletedIds(siteId, ids) {
+  if (!ids || !ids.length) return;
+  const delKey = 'ams_deleted_ids_' + siteId;
+  try {
+    const cur = new Set(JSON.parse(localStorage.getItem(delKey) || '[]'));
+    ids.forEach(id => { if (id) cur.add(id); });
+    localStorage.setItem(delKey, JSON.stringify([...cur]));
+  } catch(e) { console.warn('deletedIds tracking failed:', e); }
+}
+
 async function deleteHistoricalMonth() {
   const siteId   = document.getElementById('hist-site').value;
   const month    = document.getElementById('hist-month').value;
@@ -10971,20 +11715,53 @@ async function deleteHistoricalMonth() {
   const site = sites.find(s => s.id === siteId);
   if (!site) return;
 
-  const before = (site.data || []).length;
-  // Remove ALL records for this month that are historical
-  site.data = (site.data || []).filter(r => !(r.month === monthStr && r.__historical__));
-  const removed = before - site.data.length;
-
-  if (removed === 0) {
-    showToast('No historical records found for ' + monthStr, 'error');
+  const toRemove = (site.data || []).filter(r => r.month === monthStr && r.__historical__);
+  if (!toRemove.length) {
+    const realCount = (site.data || []).filter(r => r.month === monthStr && !r.__historical__).length;
+    showToast(realCount
+      ? `No historical records for ${monthStr} — its ${realCount} records are guard-entered. Use "Delete ALL records for this month" to remove those.`
+      : 'No historical records found for ' + monthStr, 'error');
     return;
   }
+  const removeIds = new Set(toRemove.map(r => r.id));
+  site.data = (site.data || []).filter(r => !removeIds.has(r.id));
+  const removed = toRemove.length;
+  _trackDeletedIds(siteId, [...removeIds]);
+  saveSiteData(siteId, site.data);
 
   await saveBackToFile(siteId);
   renderOverview();
   loadHistoricalCounts(); // refresh the counts display
   showToast('🗑 Removed ' + removed + ' historical records for ' + monthStr, 'success');
+}
+
+async function deleteAllRecordsForMonth() {
+  const siteId   = document.getElementById('hist-site').value;
+  const month    = document.getElementById('hist-month').value;
+  const year     = document.getElementById('hist-year').value;
+  const monthStr = month + ' ' + year;
+  if (!siteId) { showToast('Select a site first', 'error'); return; }
+  const site = sites.find(s => s.id === siteId);
+  if (!site) return;
+
+  const toRemove = (site.data || []).filter(r => r.month === monthStr);
+  if (!toRemove.length) { showToast('No records found for ' + monthStr, 'error'); return; }
+  const hist = toRemove.filter(r => r.__historical__).length;
+  const real = toRemove.length - hist;
+  if (!confirm(`Delete ALL ${toRemove.length} records for ${site.name} — ${monthStr}?\n\n` +
+    `• ${real} guard-entered incident record${real!==1?'s':''}\n• ${hist} historical record${hist!==1?'s':''}\n\n` +
+    `This removes them from the incident log as well as the reports, and syncs the deletion to the cloud. ` +
+    `An automatic backup is kept. You can then enter the correct counts and Save.`)) return;
+
+  const removeIds = new Set(toRemove.map(r => r.id));
+  toRemove.forEach(r => { try { logAuditEntry(siteId, 'delete', r, null); } catch(e) {} });
+  _trackDeletedIds(siteId, [...removeIds]);
+  site.data = (site.data || []).filter(r => !removeIds.has(r.id));
+  saveSiteData(siteId, site.data);
+  await saveBackToFile(siteId);
+  renderOverview();
+  loadHistoricalCounts();
+  showToast(`🗑 Removed all ${toRemove.length} records for ${monthStr}`, 'success');
 }
 
 async function saveHistoricalData() {
@@ -11003,7 +11780,11 @@ async function saveHistoricalData() {
   const total = [...inputs].reduce((s,i) => s + parseInt(i.value||0,10), 0);
   if (total === 0) { showToast('Enter at least one incident count','error'); return; }
 
-  // Remove existing historical records for this month (will replace with new counts)
+  // Remove existing historical records for this month (will replace with new
+  // counts) — and record their IDs as deleted, or the save merge restores
+  // them and the month ends up with old + new counts stacked together.
+  const _replaced = (site.data || []).filter(r => r.month === monthStr && r.__historical__).map(r => r.id);
+  _trackDeletedIds(siteId, _replaced);
   site.data = (site.data || []).filter(r => !(r.month === monthStr && r.__historical__));
 
   // Generate historical records spread across the month
@@ -11090,6 +11871,10 @@ let _plHistoryOnly = false; // toggled by "history only" link — reset whenever
 // back to the local/default list when the cloud payload has no categories
 // yet (a genuinely brand-new site).
 function paperLogEffectiveCats(site, payload) {
+  // The site's own imported config wins over categories saved inside an
+  // older paper-log file (those can be a stale copy of the generic list).
+  const full = getFullCatsForSite(site);
+  if (full.fromConfig) return full.sections;
   if (payload && payload.meta && payload.meta.categories && Object.keys(payload.meta.categories).length) {
     return payload.meta.categories;
   }
@@ -11240,7 +12025,7 @@ function importPaperLogConfigs(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     let payload;
-    try { payload = JSON.parse(e.target.result); }
+    try { payload = parseJsonLenient(e.target.result); }
     catch { showToast('That file is not valid JSON', 'error'); return; }
     if (payload.__ams_export__ !== 'paperlog-configs' || !Array.isArray(payload.sites)) {
       showToast('That doesn\'t look like a Paper Log configs export (made with Export All Configs)', 'error');
@@ -11256,6 +12041,7 @@ function importPaperLogConfigs(file) {
         try {
           localStorage.setItem('ams_entry_cats_' + code, JSON.stringify(cfg.categories));
           delete _siteOtherTypesCache[code];
+          delete _siteRealCatsCache[code]; delete _siteCatMatchCache[code];
         } catch(e) { /* storage full — connection details below still get applied */ }
       }
       const existing = sites.find(s => s.code === code);
@@ -11293,7 +12079,7 @@ function importPaperLogHistoricalJSON(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     let payload;
-    try { payload = JSON.parse(e.target.result); }
+    try { payload = parseJsonLenient(e.target.result); }
     catch { showToast('That file is not valid JSON', 'error'); return; }
 
     const fileMeta = payload && payload.meta;
@@ -11391,6 +12177,7 @@ function applyPaperLogImportCategories(code, categories) {
   try {
     localStorage.setItem('ams_entry_cats_' + code, JSON.stringify(categories));
     delete _siteOtherTypesCache[code]; // stale cache would otherwise hide the new categories until reload
+    delete _siteRealCatsCache[code]; delete _siteCatMatchCache[code];
   } catch(e) { showToast('Categories could not save — device storage may be full', 'error'); }
 }
 
@@ -11730,7 +12517,7 @@ async function pullWufooForPaperLog() {
   // exactly, which is the whole reason this needs a human decision).
   const rawTypes = [...new Set(wufooEntries.map(e => (e.IncidentType||'').trim()).filter(Boolean))];
   const syntheticArr = rawTypes.map(t => ({ type: t, siteCode: site.code }));
-  const { sections: classifiedSections } = getCatsForSite(syntheticArr, site.name);
+  const { sections: classifiedSections } = getCatsForSite(syntheticArr, site.name, site.code);
   const guessedSectionOf = {};
   Object.entries(classifiedSections).forEach(([section, catArr]) => {
     catArr.forEach(item => { guessedSectionOf[item.toLowerCase()] = section; });
@@ -12246,6 +13033,358 @@ function generateAllPPEPDF() {
   if(win){ win.document.write(html); win.document.close(); }
 }
 
+// ══ ALL ISOLATIONS MODAL ═════════════════════════════════════════════════════
+// Same cross-site aggregation pattern as openAllPPEModal() — the overview
+// tile's "Isolated" count was already summed across every site, but clicking
+// it used to jump to the single-site Isolation Register tab (showTab
+// ('isolation')), which only ever showed the currently active site's data —
+// so it looked empty/wrong on every site except whichever one happened to be
+// selected. This shows every site's isolation records grouped together.
+
+function openAllIsolationsModal() {
+  const modal = document.getElementById('all-isolations-modal');
+  const body  = document.getElementById('all-isolations-body');
+  const sub   = document.getElementById('all-isolations-sub');
+
+  const allRecords = sites.flatMap(s => (s.isolationData||[]).map(r => ({...r, siteName: s.name, siteId__: s.id})))
+    .sort((a,b) => {
+      const aOpen = a.status === 'Isolated', bOpen = b.status === 'Isolated';
+      if (aOpen && !bOpen) return -1;
+      if (!aOpen && bOpen) return 1;
+      return ((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||''));
+    });
+
+  const openCount = allRecords.filter(r => r.status === 'Isolated').length;
+  sub.textContent = openCount + ' isolated · ' + allRecords.length + ' total record' + (allRecords.length!==1?'s':'') + ' across all sites';
+
+  if (!allRecords.length) {
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dk-text3);">No isolation records across any site.</div>';
+    modal.style.display = 'flex';
+    return;
+  }
+
+  const bySite = {};
+  allRecords.forEach(r => { if(!bySite[r.siteName]) bySite[r.siteName]=[]; bySite[r.siteName].push(r); });
+
+  let html = '';
+  Object.entries(bySite).forEach(([siteName, records]) => {
+    const openHere = records.filter(r=>r.status==='Isolated').length;
+    html += `<div style="margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--dk-border);">
+        ${siteName} — ${records.length} record${records.length!==1?'s':''}${openHere?' · '+openHere+' isolated':''}
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--dk-bg);">
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Date</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">What</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Location</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Isolated By</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Status</th>
+        </tr></thead><tbody>`;
+
+    records.forEach((r, i) => {
+      const parts   = (r.date||'').split('-');
+      const dateStr = parts[2] ? parts[2]+'/'+parts[1]+'/'+parts[0] : r.date||'—';
+      const isOpen  = r.status === 'Isolated';
+      const statusHtml = isOpen
+        ? '<span style="color:#f59e0b;font-weight:600;">🔒 Isolated</span>'
+        : '<span style="color:#5DCAA5;font-weight:600;">✓ Restored</span>';
+      const bg = i%2===0 ? 'background:var(--dk-bg2);' : '';
+      html += `<tr style="${bg}border-bottom:1px solid var(--dk-border);cursor:pointer;" onclick="openIsolationFromModal('${r.id}','${r.siteId__}')">
+        <td style="padding:8px 10px;color:var(--dk-text);white-space:nowrap;">${dateStr} ${r.time||''}</td>
+        <td style="padding:8px 10px;color:var(--dk-text);">${r.what||'—'}</td>
+        <td style="padding:8px 10px;color:var(--dk-text2);">${r.location||'—'}</td>
+        <td style="padding:8px 10px;color:var(--dk-text2);">${r.isolatedBy||'—'}</td>
+        <td style="padding:8px 10px;">${statusHtml} <span style='color:var(--dk-text3);font-size:10px;margin-left:6px;'>&#9654; View</span></td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+  });
+
+  body.innerHTML = html;
+  modal.style.display = 'flex';
+}
+
+function closeAllIsolationsModal() { document.getElementById('all-isolations-modal').style.display = 'none'; }
+
+function openIsolationFromModal(recordId, siteId) {
+  const modal = document.getElementById('all-isolations-modal');
+  if (modal) modal.style.display = 'none';
+  if (siteId) activeSiteId = siteId;
+  showTab('isolation');
+  setTimeout(() => openIsolationDetail(recordId), 200);
+}
+
+function generateAllIsolationsPDF() {
+  const today = new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'});
+  const allRecords = sites.flatMap(s => (s.isolationData||[]).map(r => ({...r, siteName: s.name})))
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  const bySite = {};
+  allRecords.forEach(r => { if(!bySite[r.siteName]) bySite[r.siteName]=[]; bySite[r.siteName].push(r); });
+
+  let rows = '';
+  Object.entries(bySite).forEach(([siteName, records]) => {
+    rows += `<tr style="background:#e8eef5;"><td colspan="5" style="padding:10px 14px;font-weight:700;font-size:13px;color:#1a3a6b;">${siteName} — ${records.length} record${records.length!==1?'s':''}</td></tr>`;
+    records.forEach((r,i) => {
+      const parts = (r.date||'').split('-');
+      const dateStr = parts[2] ? parts[2]+'/'+parts[1]+'/'+parts[0] : r.date||'—';
+      const isOpen = r.status === 'Isolated';
+      rows += `<tr style="background:${i%2===0?'#fff':'#f9fafc'};border-bottom:1px solid #e0e8f0;">
+        <td style="padding:8px 12px;">${dateStr}</td>
+        <td style="padding:8px 12px;">${r.what||'—'}</td>
+        <td style="padding:8px 12px;">${siteName}</td>
+        <td style="padding:8px 12px;">${r.location||'—'}</td>
+        <td style="padding:8px 12px;color:${isOpen?'#d97706':'#2563eb'};font-weight:600;">${isOpen?'Isolated':'Restored'}</td>
+      </tr>`;
+    });
+  });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>@page{margin:15mm}body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{font-size:20px;color:#1a3a6b;margin:0 0 4px}h2{font-size:13px;color:#555;font-weight:400;margin:0 0 20px}table{width:100%;border-collapse:collapse}th{background:#0F1F3D;color:#fff;padding:9px 12px;text-align:left;font-size:11px}.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:3px solid #1a3a6b;padding-bottom:14px}</style>
+  </head><body>
+  <div class="hdr"><div><h1>AMS Security — Isolation Register</h1><h2>All Sites · Generated ${today}</h2></div>
+  <div style="background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700;">${allRecords.length} Records</div></div>
+  <table><thead><tr><th>Date</th><th>What</th><th>Site</th><th>Location</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+  <div style="margin-top:24px;font-size:10px;color:#888;border-top:1px solid #e0e8f0;padding-top:10px;">AMS Security Management System · Isolation Register · ${today}</div>
+  ${'<'}script${'>'}window.onload=function(){window.print();}${'<'}/script${'>'}</body></html>`;
+
+  const win = window.open('','_blank');
+  if(win){ win.document.write(html); win.document.close(); }
+}
+
+// ══ ALL PERMITS MODAL ════════════════════════════════════════════════════════
+// Same fix as the isolations modal above — permit tile's count was already
+// site-wide, but the click target (showTab('permit')) wasn't.
+
+function openAllPermitsModal() {
+  const modal = document.getElementById('all-permits-modal');
+  const body  = document.getElementById('all-permits-body');
+  const sub   = document.getElementById('all-permits-sub');
+
+  const allRecords = sites.flatMap(s => (s.permitData||[]).map(r => ({...r, siteName: s.name, siteId__: s.id})))
+    .sort((a,b) => {
+      const aOpen = a.status === 'Active', bOpen = b.status === 'Active';
+      if (aOpen && !bOpen) return -1;
+      if (!aOpen && bOpen) return 1;
+      return ((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||''));
+    });
+
+  const openCount = allRecords.filter(r => r.status === 'Active').length;
+  sub.textContent = openCount + ' active · ' + allRecords.length + ' total record' + (allRecords.length!==1?'s':'') + ' across all sites';
+
+  if (!allRecords.length) {
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dk-text3);">No permit records across any site.</div>';
+    modal.style.display = 'flex';
+    return;
+  }
+
+  const bySite = {};
+  allRecords.forEach(r => { if(!bySite[r.siteName]) bySite[r.siteName]=[]; bySite[r.siteName].push(r); });
+
+  let html = '';
+  Object.entries(bySite).forEach(([siteName, records]) => {
+    const openHere = records.filter(r=>r.status==='Active').length;
+    html += `<div style="margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:700;color:#378add;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--dk-border);">
+        ${siteName} — ${records.length} record${records.length!==1?'s':''}${openHere?' · '+openHere+' active':''}
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--dk-bg);">
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Date</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Permit #</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Type</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Issued To</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Status</th>
+        </tr></thead><tbody>`;
+
+    records.forEach((r, i) => {
+      const parts   = (r.date||'').split('-');
+      const dateStr = parts[2] ? parts[2]+'/'+parts[1]+'/'+parts[0] : r.date||'—';
+      const isOpen  = r.status === 'Active';
+      const statusHtml = isOpen
+        ? '<span style="color:#378add;font-weight:600;">📝 Active</span>'
+        : '<span style="color:#5DCAA5;font-weight:600;">✓ Closed</span>';
+      const bg = i%2===0 ? 'background:var(--dk-bg2);' : '';
+      html += `<tr style="${bg}border-bottom:1px solid var(--dk-border);cursor:pointer;" onclick="openPermitFromModal('${r.id}','${r.siteId__}')">
+        <td style="padding:8px 10px;color:var(--dk-text);white-space:nowrap;">${dateStr} ${r.time||''}</td>
+        <td style="padding:8px 10px;color:var(--dk-text);">${r.permitNumber||'—'}</td>
+        <td style="padding:8px 10px;color:var(--dk-text2);">${r.type||'—'}</td>
+        <td style="padding:8px 10px;color:var(--dk-text2);">${r.issuedTo||'—'}</td>
+        <td style="padding:8px 10px;">${statusHtml} <span style='color:var(--dk-text3);font-size:10px;margin-left:6px;'>&#9654; View</span></td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+  });
+
+  body.innerHTML = html;
+  modal.style.display = 'flex';
+}
+
+function closeAllPermitsModal() { document.getElementById('all-permits-modal').style.display = 'none'; }
+
+function openPermitFromModal(recordId, siteId) {
+  const modal = document.getElementById('all-permits-modal');
+  if (modal) modal.style.display = 'none';
+  if (siteId) activeSiteId = siteId;
+  showTab('permit');
+  setTimeout(() => openPermitDetail(recordId), 200);
+}
+
+function generateAllPermitsPDF() {
+  const today = new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'});
+  const allRecords = sites.flatMap(s => (s.permitData||[]).map(r => ({...r, siteName: s.name})))
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  const bySite = {};
+  allRecords.forEach(r => { if(!bySite[r.siteName]) bySite[r.siteName]=[]; bySite[r.siteName].push(r); });
+
+  let rows = '';
+  Object.entries(bySite).forEach(([siteName, records]) => {
+    rows += `<tr style="background:#e8eef5;"><td colspan="5" style="padding:10px 14px;font-weight:700;font-size:13px;color:#1a3a6b;">${siteName} — ${records.length} record${records.length!==1?'s':''}</td></tr>`;
+    records.forEach((r,i) => {
+      const parts = (r.date||'').split('-');
+      const dateStr = parts[2] ? parts[2]+'/'+parts[1]+'/'+parts[0] : r.date||'—';
+      const isOpen = r.status === 'Active';
+      rows += `<tr style="background:${i%2===0?'#fff':'#f9fafc'};border-bottom:1px solid #e0e8f0;">
+        <td style="padding:8px 12px;">${dateStr}</td>
+        <td style="padding:8px 12px;">${r.permitNumber||'—'}</td>
+        <td style="padding:8px 12px;">${siteName}</td>
+        <td style="padding:8px 12px;">${r.issuedTo||'—'}</td>
+        <td style="padding:8px 12px;color:${isOpen?'#2563eb':'#16a34a'};font-weight:600;">${isOpen?'Active':'Closed'}</td>
+      </tr>`;
+    });
+  });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>@page{margin:15mm}body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{font-size:20px;color:#1a3a6b;margin:0 0 4px}h2{font-size:13px;color:#555;font-weight:400;margin:0 0 20px}table{width:100%;border-collapse:collapse}th{background:#0F1F3D;color:#fff;padding:9px 12px;text-align:left;font-size:11px}.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:3px solid #1a3a6b;padding-bottom:14px}</style>
+  </head><body>
+  <div class="hdr"><div><h1>AMS Security — Permit Register</h1><h2>All Sites · Generated ${today}</h2></div>
+  <div style="background:#dbeafe;color:#1e40af;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700;">${allRecords.length} Records</div></div>
+  <table><thead><tr><th>Date</th><th>Permit #</th><th>Site</th><th>Issued To</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+  <div style="margin-top:24px;font-size:10px;color:#888;border-top:1px solid #e0e8f0;padding-top:10px;">AMS Security Management System · Permit Register · ${today}</div>
+  ${'<'}script${'>'}window.onload=function(){window.print();}${'<'}/script${'>'}</body></html>`;
+
+  const win = window.open('','_blank');
+  if(win){ win.document.write(html); win.document.close(); }
+}
+
+// ══ ALL KEYS MODAL ═══════════════════════════════════════════════════════════
+// Same fix as the isolations/permits modals above — keys tile's count was
+// already site-wide, but the click target (showTab('keys')) wasn't.
+
+function openAllKeysModal() {
+  const modal = document.getElementById('all-keys-modal');
+  const body  = document.getElementById('all-keys-body');
+  const sub   = document.getElementById('all-keys-sub');
+
+  const allRecords = sites.flatMap(s => (s.keysData||[]).map(r => ({...r, siteName: s.name, siteId__: s.id})))
+    .sort((a,b) => {
+      const aOpen = a.status === 'Out', bOpen = b.status === 'Out';
+      if (aOpen && !bOpen) return -1;
+      if (!aOpen && bOpen) return 1;
+      return ((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||''));
+    });
+
+  const openCount = allRecords.filter(r => r.status === 'Out').length;
+  sub.textContent = openCount + ' out · ' + allRecords.length + ' total record' + (allRecords.length!==1?'s':'') + ' across all sites';
+
+  if (!allRecords.length) {
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dk-text3);">No key records across any site.</div>';
+    modal.style.display = 'flex';
+    return;
+  }
+
+  const bySite = {};
+  allRecords.forEach(r => { if(!bySite[r.siteName]) bySite[r.siteName]=[]; bySite[r.siteName].push(r); });
+
+  let html = '';
+  Object.entries(bySite).forEach(([siteName, records]) => {
+    const openHere = records.filter(r=>r.status==='Out').length;
+    html += `<div style="margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--dk-border);">
+        ${siteName} — ${records.length} record${records.length!==1?'s':''}${openHere?' · '+openHere+' out':''}
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--dk-bg);">
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Date</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Key ID</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Description</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Issued To</th>
+          <th style="padding:7px 10px;text-align:left;color:var(--dk-text2);font-weight:600;">Status</th>
+        </tr></thead><tbody>`;
+
+    records.forEach((r, i) => {
+      const parts   = (r.date||'').split('-');
+      const dateStr = parts[2] ? parts[2]+'/'+parts[1]+'/'+parts[0] : r.date||'—';
+      const isOpen  = r.status === 'Out';
+      const statusHtml = isOpen
+        ? '<span style="color:#8b5cf6;font-weight:600;">🔑 Out</span>'
+        : '<span style="color:#5DCAA5;font-weight:600;">✓ Returned</span>';
+      const bg = i%2===0 ? 'background:var(--dk-bg2);' : '';
+      html += `<tr style="${bg}border-bottom:1px solid var(--dk-border);cursor:pointer;" onclick="openKeysFromModal('${r.id}','${r.siteId__}')">
+        <td style="padding:8px 10px;color:var(--dk-text);white-space:nowrap;">${dateStr} ${r.time||''}</td>
+        <td style="padding:8px 10px;color:var(--dk-text);">${r.keyId||'—'}</td>
+        <td style="padding:8px 10px;color:var(--dk-text2);">${r.description||'—'}</td>
+        <td style="padding:8px 10px;color:var(--dk-text2);">${r.issuedTo||'—'}</td>
+        <td style="padding:8px 10px;">${statusHtml} <span style='color:var(--dk-text3);font-size:10px;margin-left:6px;'>&#9654; View</span></td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+  });
+
+  body.innerHTML = html;
+  modal.style.display = 'flex';
+}
+
+function closeAllKeysModal() { document.getElementById('all-keys-modal').style.display = 'none'; }
+
+function openKeysFromModal(recordId, siteId) {
+  const modal = document.getElementById('all-keys-modal');
+  if (modal) modal.style.display = 'none';
+  if (siteId) activeSiteId = siteId;
+  showTab('keys');
+  setTimeout(() => openKeysDetail(recordId), 200);
+}
+
+function generateAllKeysPDF() {
+  const today = new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'});
+  const allRecords = sites.flatMap(s => (s.keysData||[]).map(r => ({...r, siteName: s.name})))
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  const bySite = {};
+  allRecords.forEach(r => { if(!bySite[r.siteName]) bySite[r.siteName]=[]; bySite[r.siteName].push(r); });
+
+  let rows = '';
+  Object.entries(bySite).forEach(([siteName, records]) => {
+    rows += `<tr style="background:#e8eef5;"><td colspan="5" style="padding:10px 14px;font-weight:700;font-size:13px;color:#1a3a6b;">${siteName} — ${records.length} record${records.length!==1?'s':''}</td></tr>`;
+    records.forEach((r,i) => {
+      const parts = (r.date||'').split('-');
+      const dateStr = parts[2] ? parts[2]+'/'+parts[1]+'/'+parts[0] : r.date||'—';
+      const isOpen = r.status === 'Out';
+      rows += `<tr style="background:${i%2===0?'#fff':'#f9fafc'};border-bottom:1px solid #e0e8f0;">
+        <td style="padding:8px 12px;">${dateStr}</td>
+        <td style="padding:8px 12px;">${r.keyId||'—'}</td>
+        <td style="padding:8px 12px;">${siteName}</td>
+        <td style="padding:8px 12px;">${r.issuedTo||'—'}</td>
+        <td style="padding:8px 12px;color:${isOpen?'#7c3aed':'#16a34a'};font-weight:600;">${isOpen?'Out':'Returned'}</td>
+      </tr>`;
+    });
+  });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>@page{margin:15mm}body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{font-size:20px;color:#1a3a6b;margin:0 0 4px}h2{font-size:13px;color:#555;font-weight:400;margin:0 0 20px}table{width:100%;border-collapse:collapse}th{background:#0F1F3D;color:#fff;padding:9px 12px;text-align:left;font-size:11px}.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:3px solid #1a3a6b;padding-bottom:14px}</style>
+  </head><body>
+  <div class="hdr"><div><h1>AMS Security — Key Register</h1><h2>All Sites · Generated ${today}</h2></div>
+  <div style="background:#ede9fe;color:#5b21b6;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700;">${allRecords.length} Records</div></div>
+  <table><thead><tr><th>Date</th><th>Key ID</th><th>Site</th><th>Issued To</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+  <div style="margin-top:24px;font-size:10px;color:#888;border-top:1px solid #e0e8f0;padding-top:10px;">AMS Security Management System · Key Register · ${today}</div>
+  ${'<'}script${'>'}window.onload=function(){window.print();}${'<'}/script${'>'}</body></html>`;
+
+  const win = window.open('','_blank');
+  if(win){ win.document.write(html); win.document.close(); }
+}
+
 // ══ ALL AAS MODAL ════════════════════════════════════════════════════════════
 
 function openAllAASModal() {
@@ -12507,6 +13646,218 @@ function loadCheckpointReport() {
   frame.dataset.loaded = '1';
 }
 
+
+
+// =============================================
+// INDUCTION — IndexedDB FILE STORAGE
+// =============================================
+var IND_DB_NAME = 'ams_induction_db';
+var IND_STORE = 'files';
+
+function openIndDB(cb) {
+  var req = indexedDB.open(IND_DB_NAME, 1);
+  req.onupgradeneeded = function(e) { e.target.result.createObjectStore(IND_STORE); };
+  req.onsuccess = function(e) { cb(null, e.target.result); };
+  req.onerror = function(e) { cb(e.target.error); };
+}
+function indDBSet(key, val, cb) {
+  openIndDB(function(err, db) {
+    if (err) { cb && cb(err); return; }
+    var tx = db.transaction(IND_STORE, 'readwrite');
+    tx.objectStore(IND_STORE).put(val, key);
+    tx.oncomplete = function() { cb && cb(null); };
+    tx.onerror = function(e) { cb && cb(e.target.error); };
+  });
+}
+function indDBGet(key, cb) {
+  openIndDB(function(err, db) {
+    if (err) { cb(err, null); return; }
+    var tx = db.transaction(IND_STORE, 'readonly');
+    var req = tx.objectStore(IND_STORE).get(key);
+    req.onsuccess = function() { cb(null, req.result || null); };
+    req.onerror = function(e) { cb(e.target.error, null); };
+  });
+}
+function indDBDelete(key, cb) {
+  openIndDB(function(err, db) {
+    if (err) { cb && cb(err); return; }
+    var tx = db.transaction(IND_STORE, 'readwrite');
+    tx.objectStore(IND_STORE).delete(key);
+    tx.oncomplete = function() { cb && cb(null); };
+  });
+}
+
+function loadInductionFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var statusEl = document.getElementById('ind-file-status');
+  if (statusEl) statusEl.textContent = 'Saving...';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var html = e.target.result;
+    var dateStr = new Date().toLocaleDateString('en-AU');
+    var kb = Math.round(html.length / 1024);
+    indDBSet('ams_induction_html', html, function(err) {
+      if (err) { alert('Could not save: ' + err.message); updateInductionFileStatus(); return; }
+      indDBSet('ams_induction_meta', {date: dateStr, kb: kb}, function() {
+        updateInductionFileStatus();
+        alert('✅ Induction file loaded! (' + kb + ' KB)');
+      });
+    });
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function clearInductionFile() {
+  if (!confirm('Remove the stored induction file?')) return;
+  indDBDelete('ams_induction_html', function() {
+    indDBDelete('ams_induction_meta', function() { updateInductionFileStatus(); });
+  });
+}
+
+function updateInductionFileStatus() {
+  var el = document.getElementById('ind-file-status');
+  if (!el) return;
+  indDBGet('ams_induction_meta', function(err, meta) {
+    if (meta) {
+      el.innerHTML = '✅ <strong style="color:#5dcaa5;">AMS_Induction.html</strong> loaded (' + meta.kb + ' KB) — uploaded ' + meta.date;
+    } else {
+      el.textContent = 'No file loaded. Go to Admin Setup to upload AMS_Induction.html.';
+    }
+  });
+}
+
+function openInductionPreview() {
+  indDBGet('ams_induction_html', function(err, html) {
+    if (!html) {
+      alert('No induction file loaded. Go to Admin Setup - Induction File and upload AMS_Induction.html first.');
+      return;
+    }
+    // Replace the DOMContentLoaded init call so manager bypasses access screen entirely
+    var patched = html.replace(
+      "document.addEventListener('DOMContentLoaded', initAccessScreen);",
+      "document.addEventListener('DOMContentLoaded', function() { showInduction('Manager'); });"
+    );
+    var blob = new Blob([patched], {type: 'text/html'});
+    var url = URL.createObjectURL(blob);
+    var win = window.open(url, '_blank');
+    setTimeout(function() { URL.revokeObjectURL(url); }, 15000);
+    if (!win) alert('Could not open induction. Please allow popups for this page.');
+  });
+}
+
+function downloadInduction(e) {
+  if (e) e.stopPropagation();
+  indDBGet('ams_induction_html', function(err, html) {
+    if (!html) {
+      alert('No induction file loaded. Go to Admin Setup - Induction File and upload AMS_Induction.html first.');
+      return;
+    }
+    var blob = new Blob([html], {type: 'text/html'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'AMS_Induction.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(a.href); }, 2000);
+  });
+}
+
+function showIndCodeGenerator() {
+  document.getElementById('ind-choice-tiles').style.display = 'none';
+  document.getElementById('ind-codegen-section').style.display = 'block';
+  setTimeout(function() { var el = document.getElementById('ind-guard-name'); if(el) el.focus(); }, 100);
+}
+function hideIndCodeGenerator() {
+  document.getElementById('ind-codegen-section').style.display = 'none';
+  document.getElementById('ind-choice-tiles').style.display = 'grid';
+  resetInductionGenerator();
+}
+
+// =============================================
+// GUARD INDUCTION CODE GENERATOR
+// =============================================
+var IND_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIfL2RI60LwF1r7Pkb_3I51_tg7LRV13n3QWGbf09LvI4lnlcI--9li7Talg6yVOIB/exec';
+
+function generateInductionCode() {
+  var name = document.getElementById('ind-guard-name').value.trim();
+  if (!name) { document.getElementById('ind-guard-name').focus(); return; }
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code = 'AMS-';
+  for (var i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  var today = new Date();
+  var expiry = new Date(today); expiry.setDate(expiry.getDate() + 14);
+  var dateStr = today.toLocaleDateString('en-AU', {day:'2-digit',month:'2-digit',year:'numeric'});
+  var expiryStr = expiry.toLocaleDateString('en-AU', {day:'2-digit',month:'2-digit',year:'numeric'});
+  document.getElementById('ind-gen-btn').disabled = true;
+  document.getElementById('ind-spinner').style.display = 'block';
+  document.getElementById('ind-result').style.display = 'none';
+  document.getElementById('ind-error').style.display = 'none';
+  fetch(IND_SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'generate', code:code, name:name, date:dateStr})})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById('ind-spinner').style.display = 'none';
+      if (data.status === 'ok') {
+        document.getElementById('ind-code-display').textContent = code;
+        document.getElementById('ind-result-name').textContent = name;
+        document.getElementById('ind-result-date').textContent = dateStr;
+        document.getElementById('ind-result-expiry').textContent = expiryStr;
+        document.getElementById('ind-email-snippet').textContent =
+          'Dear ' + name + ',\n\n' +
+          'Your induction access code is: ' + code + '\n\n' +
+          'Congratulations on your successful interview — we are thrilled to welcome you to the AMS Security team!\n\n' +
+          'The next step in your journey with us is completing your induction, which is all outlined in the Staff Induction Package attached to this email.\n\n' +
+          'Please find the AMS Security Staff Induction Package attached to this email. Save the file to your device, open it in Chrome or Edge, and enter the access code above to begin.\n\n' +
+          'The induction package covers everything you need to know before your first shift, including:\n' +
+          '• Company policies and procedures\n' +
+          '• Emergency response codes\n' +
+          '• Guardhouse onboarding — including how to manage your shifts, timesheets and leave\n' +
+          '• Body camera and vehicle policies\n' +
+          '• And much more\n\n' +
+          'We ask that you work through the entire package thoroughly before your start date. It is important that you are familiar with all content as it directly applies to your role at AMS Security.\n\n' +
+          'You will be contacted shortly to arrange a date and time for your in-person induction at AMS, where we will take care of your uniform fitting, policy sign-offs and any remaining administrative requirements. Please come to this session having already reviewed the induction material in full.\n\n' +
+          'Please note that a number of the policies within the induction require your physical signature. These sign-off sheets will be completed during your in-person induction session.\n\n' +
+          'The induction package will remain available to you for 14 days as a reference. If you require longer please advise AMS Management.\n\n' +
+          'We look forward to seeing you soon and having you as part of the team!\n\n' +
+          'Warm regards,\nAMS Security';
+        document.getElementById('ind-result').style.display = 'block';
+      } else { showIndError('Something went wrong. Please try again.'); }
+    })
+    .catch(function() {
+      document.getElementById('ind-spinner').style.display = 'none';
+      showIndError('Could not connect. Check your internet connection and try again.');
+    });
+}
+
+function copyInductionCode() {
+  navigator.clipboard.writeText(document.getElementById('ind-code-display').textContent).then(function() {
+    event.target.textContent = '✅ Copied!';
+    setTimeout(function() { event.target.textContent = '📋 Copy Code'; }, 2000);
+  });
+}
+function copyEmailSnippet() {
+  navigator.clipboard.writeText(document.getElementById('ind-email-snippet').textContent).then(function() {
+    event.target.textContent = '✅ Copied!';
+    setTimeout(function() { event.target.textContent = '📋 Copy Email Snippet'; }, 2000);
+  });
+}
+function showIndError(msg) {
+  document.getElementById('ind-error-msg').textContent = msg;
+  document.getElementById('ind-error').style.display = 'block';
+  document.getElementById('ind-gen-btn').disabled = false;
+}
+function resetInductionGenerator() {
+  document.getElementById('ind-guard-name').value = '';
+  document.getElementById('ind-result').style.display = 'none';
+  document.getElementById('ind-error').style.display = 'none';
+  document.getElementById('ind-gen-btn').disabled = false;
+  document.getElementById('ind-spinner').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() { updateInductionFileStatus(); });
+
 </script>
 
 <!-- ══ MANAGER EXPORT MODAL ══ -->
@@ -12726,6 +14077,57 @@ function loadCheckpointReport() {
       </div>
     </div>
     <div style="overflow-y:auto;padding:20px;" id="all-ppe-body"></div>
+  </div>
+</div>
+
+<!-- ══ ALL ISOLATIONS MODAL ══ -->
+<div id="all-isolations-modal" onclick="if(event.target===this)closeAllIsolationsModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--dk-bg2);border-radius:14px;width:100%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;border:1px solid var(--dk-border);">
+    <div style="padding:18px 24px;border-bottom:1px solid var(--dk-border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:17px;font-weight:700;color:var(--dk-text);">🔒 Isolation Register — All Sites</div>
+        <div style="font-size:12px;color:var(--dk-text3);margin-top:2px;" id="all-isolations-sub">Loading...</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button onclick="generateAllIsolationsPDF()" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">📄 Download PDF Report</button>
+        <button onclick="closeAllIsolationsModal()" class="dk-btn">Close</button>
+      </div>
+    </div>
+    <div style="overflow-y:auto;padding:20px;" id="all-isolations-body"></div>
+  </div>
+</div>
+
+<!-- ══ ALL PERMITS MODAL ══ -->
+<div id="all-permits-modal" onclick="if(event.target===this)closeAllPermitsModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--dk-bg2);border-radius:14px;width:100%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;border:1px solid var(--dk-border);">
+    <div style="padding:18px 24px;border-bottom:1px solid var(--dk-border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:17px;font-weight:700;color:var(--dk-text);">📝 Permit Register — All Sites</div>
+        <div style="font-size:12px;color:var(--dk-text3);margin-top:2px;" id="all-permits-sub">Loading...</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button onclick="generateAllPermitsPDF()" style="background:rgba(55,138,221,0.15);border:1px solid rgba(55,138,221,0.4);color:#378add;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">📄 Download PDF Report</button>
+        <button onclick="closeAllPermitsModal()" class="dk-btn">Close</button>
+      </div>
+    </div>
+    <div style="overflow-y:auto;padding:20px;" id="all-permits-body"></div>
+  </div>
+</div>
+
+<!-- ══ ALL KEYS MODAL ══ -->
+<div id="all-keys-modal" onclick="if(event.target===this)closeAllKeysModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--dk-bg2);border-radius:14px;width:100%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;border:1px solid var(--dk-border);">
+    <div style="padding:18px 24px;border-bottom:1px solid var(--dk-border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:17px;font-weight:700;color:var(--dk-text);">🔑 Key Register — All Sites</div>
+        <div style="font-size:12px;color:var(--dk-text3);margin-top:2px;" id="all-keys-sub">Loading...</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button onclick="generateAllKeysPDF()" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.4);color:#8b5cf6;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">📄 Download PDF Report</button>
+        <button onclick="closeAllKeysModal()" class="dk-btn">Close</button>
+      </div>
+    </div>
+    <div style="overflow-y:auto;padding:20px;" id="all-keys-body"></div>
   </div>
 </div>
 
